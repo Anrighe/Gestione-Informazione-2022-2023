@@ -2,14 +2,10 @@ from whoosh.index import create_in, open_dir
 from whoosh.fields import *
 import os
 import csv
-import requests
 
 
 schema = Schema(gameTitle=TEXT(stored=True),
-                content=TEXT(stored=True),
-                positive=NUMERIC(stored=True),
-                neutral=NUMERIC(stored=True),
-                negative=NUMERIC(stored=True))
+                content=TEXT(stored=True))
 
 if not os.path.exists("indexdir"):  # se non esiste la cartella indexdir la crea
     os.mkdir("indexdir")
