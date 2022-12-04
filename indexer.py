@@ -17,39 +17,36 @@ ix = create_in("indexdir", schema)  # create_in() removes the index that has bee
 writer = ix.writer()
 
 with open("AmazonReviews.csv", encoding="utf8") as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=",")
-    firstLine = True
 
     maxEntries = 10  # stops importing from csv after the specified amount of entries
     counter = 0
 
+    csv_reader = csv.reader(csv_file, delimiter=",")
+    next(csv_reader) # skips the first row
+
     for row in csv_reader:
-        if not firstLine:
+        productTitle = row[1]   # Product Title
+        reviewTitle = row[17]   # Review Title
+        reviewContent = row[16]   # Review Content
+        print(reviewContent)
+        try:
+            results = localRoberta.localRoberta(reviewContent)
+            #print(results)  # debug
+            print(counter+1, "/", maxEntries)  # debug
+            positiveScore = results["positive"]
+            neutralScore = results["neutral"]
+            negativeScore = results["negative"]
+            writer.add_document(productTitle=productTitle,
+                                reviewTitle=reviewTitle,
+                                reviewContent=reviewContent,
+                                positive=positiveScore,
+                                neutral=neutralScore,
+                                negative=negativeScore)
+        except RuntimeError as e:
+            print("Runtime error: reviewContent is too long for the sentiment analysis model. ", e)
 
-            productTitle = row[1]   # Product Title
-            reviewTitle = row[17]   # Review Title
-            reviewContent = row[16]   # Review Content
-
-            try:
-                results = localRoberta.localRoberta(reviewContent)
-                #print(results)  # debug
-                print(counter+1,"/",maxEntries) # debug
-                positiveScore = results["positive"]
-                neutralScore = results["neutral"]
-                negativeScore = results["negative"]
-                writer.add_document(productTitle=productTitle,
-                                    reviewTitle=reviewTitle,
-                                    reviewContent=reviewContent,
-                                    positive=positiveScore,
-                                    neutral=neutralScore,
-                                    negative=negativeScore)
-            except RuntimeError as e:
-                print("Runtime error: reviewContent is too long for the sentiment analysis model", e)
-
-            counter = counter + 1
-            if counter >= maxEntries:
-                break
-        else:
-            firstLine = False
+        counter = counter + 1
+        if counter >= maxEntries:
+            break
 
 writer.commit()
