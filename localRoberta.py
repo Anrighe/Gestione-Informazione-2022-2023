@@ -7,20 +7,6 @@ import urllib.request
 
 
 def localRoberta(text):
-    # Preprocess text (username and link placeholders)
-    def preprocess(text):
-        new_text = []
-
-        for t in text.split(" "):
-            t = '@user' if t.startswith('@') and len(t) > 1 else t #it could be deleted ?
-            t = 'http' if t.startswith('http') else t #it could be deleted ?
-            new_text.append(t)
-        return " ".join(new_text)
-
-    # Tasks:
-    # emoji, emotion, hate, irony, offensive, sentiment
-    # stance/abortion, stance/atheism, stance/climate, stance/feminist, stance/hillary
-
     task = 'sentiment'
     MODEL = f"cardiffnlp/twitter-roberta-base-{task}"
 
@@ -34,11 +20,9 @@ def localRoberta(text):
         csvreader = csv.reader(html, delimiter='\t')
     labels = [row[1] for row in csvreader if len(row) > 1]
 
-    # PT
     model = AutoModelForSequenceClassification.from_pretrained(MODEL)
-    #model.save_pretrained("weights") #saves in a directory called "weights"
+    # model.save_pretrained("weights") #saves in a directory called "weights"
 
-    text = preprocess(text)
     encoded_input = tokenizer(text, return_tensors='pt')
     output = model(**encoded_input)
     scores = output[0][0].detach().numpy()
@@ -49,7 +33,6 @@ def localRoberta(text):
     for i in range(scores.shape[0]):
         l = labels[ranking[i]]
         s = scores[ranking[i]]
-        #print(f"{i + 1}) {l} {np.round(float(s), 4)}") # prints each score
+        # print(f"{i + 1}) {l} {np.round(float(s), 4)}") # prints each score
 
-    return {labels[ranking[0]]:scores[ranking[0]], labels[ranking[1]]:scores[ranking[1]], labels[ranking[2]]:scores[ranking[2]]}
-
+    return {labels[ranking[0]]: scores[ranking[0]], labels[ranking[1]]: scores[ranking[1]], labels[ranking[2]]: scores[ranking[2]]}

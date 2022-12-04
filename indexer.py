@@ -1,4 +1,4 @@
-from whoosh.index import create_in, open_dir
+from whoosh.index import create_in
 from whoosh.fields import *
 import os
 import csv
@@ -11,16 +11,16 @@ schema = Schema(productTitle=TEXT(stored=True),
                 neutral=NUMERIC(float, 32, stored=True),
                 negative=NUMERIC(float, 32, stored=True))
 
-if not os.path.exists("indexdir"):  # se non esiste la cartella indexdir la crea
+if not os.path.exists("indexdir"):  # creates the directory indexdir if it does not exist
     os.mkdir("indexdir")
-ix = create_in("indexdir", schema)  # Cancella l'indice che è stato creato, non aggiorna || update_in() per aggiornare
+ix = create_in("indexdir", schema)  # create_in() removes the index that has been created. In order to update use update_in()
 writer = ix.writer()
 
 with open("AmazonReviews.csv", encoding="utf8") as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=",")
     firstLine = True
 
-    maxEntries = 30 #stops importing from csv after the specified amount of entries
+    maxEntries = 10  # stops importing from csv after the specified amount of entries
     counter = 0
 
     for row in csv_reader:
@@ -32,7 +32,8 @@ with open("AmazonReviews.csv", encoding="utf8") as csv_file:
 
             try:
                 results = localRoberta.localRoberta(reviewContent)
-                print(results)  # debug
+                #print(results)  # debug
+                print(counter+1,"/",maxEntries) # debug
                 positiveScore = results["positive"]
                 neutralScore = results["neutral"]
                 negativeScore = results["negative"]
@@ -46,7 +47,7 @@ with open("AmazonReviews.csv", encoding="utf8") as csv_file:
                 print("Runtime error: reviewContent is too long for the sentiment analysis model", e)
 
             counter = counter + 1
-            if counter > maxEntries:
+            if counter >= maxEntries:
                 break
         else:
             firstLine = False

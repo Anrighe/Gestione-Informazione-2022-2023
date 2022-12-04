@@ -13,7 +13,7 @@ searcher = ix.searcher(weighting=scoring.BM25F) #Con weighting=scoring. si inser
 #print(list(searcher.lexicon("content"))) #stampa il vocabolario delle parole che va a indicizzare
 parser = QueryParser("reviewContent", schema=ix.schema)
 #query = parser.parse(u"reviewContent:love") # Per query testuali
-query = NumericRange(u"negative", start=0.001, end=None) # Per query numeriche
+query = NumericRange(u"negative", start=0.005, end=None) # Per query numeriche
 results = searcher.search(query, limit=None)
 if len(results) == 0:
     print("Empty result!!")
