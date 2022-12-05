@@ -1,4 +1,5 @@
-from whoosh.index import create_in
+import whoosh.index
+from whoosh.index import *
 from whoosh.fields import *
 import os
 import csv
@@ -13,16 +14,21 @@ schema = Schema(productTitle=TEXT(stored=True),
 
 if not os.path.exists("indexdir"):  # creates the directory indexdir if it does not exist
     os.mkdir("indexdir")
-ix = create_in("indexdir", schema)  # create_in() removes the index that has been created. In order to update use update_in()
+    ix = create_in("indexdir", schema)  # create_in() removes the index that has been created. In order to update use update_in() (NON SEMBRA ESISTERE??)
+else:
+    ix = whoosh.index.open_dir("indexdir")
+
 writer = ix.writer()
 
 with open("AmazonReviews.csv", encoding="utf8") as csv_file:
 
-    maxEntries = 10  # stops importing from csv after the specified amount of entries
     counter = 0
 
     csv_reader = csv.reader(csv_file, delimiter=",")
-    next(csv_reader) # skips the first row
+    next(csv_reader)  # skips the first row
+
+    for i in range(ix.doc_count()):
+        next(csv_reader)  # skips rows
 
     for row in csv_reader:
         productTitle = row[1]   # Product Title
@@ -32,7 +38,7 @@ with open("AmazonReviews.csv", encoding="utf8") as csv_file:
         try:
             results = localRoberta.localRoberta(reviewContent)
             #print(results)  # debug
-            print(counter+1, "/", maxEntries)  # debug
+            print(ix.doc_count()+counter, "/", 41420)  # debug
             positiveScore = results["positive"]
             neutralScore = results["neutral"]
             negativeScore = results["negative"]
@@ -42,11 +48,13 @@ with open("AmazonReviews.csv", encoding="utf8") as csv_file:
                                 positive=positiveScore,
                                 neutral=neutralScore,
                                 negative=negativeScore)
-        except RuntimeError as e:
-            print("Runtime error: reviewContent is too long for the sentiment analysis model. ", e)
+        except RuntimeError:
+            print("Runtime error: reviewContent is too long for the sentiment analysis model")
+        except KeyboardInterrupt:
+            print("Keyboard Interrupt detected")
+            writer.commit()
+            exit(-1)
 
         counter = counter + 1
-        if counter >= maxEntries:
-            break
 
 writer.commit()
