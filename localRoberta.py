@@ -30,9 +30,5 @@ def localRoberta(text):
 
     ranking = np.argsort(scores)
     ranking = ranking[::-1]
-    for i in range(scores.shape[0]):
-        l = labels[ranking[i]]
-        s = scores[ranking[i]]
-        # print(f"{i + 1}) {l} {np.round(float(s), 4)}") # prints each score
 
     return {labels[ranking[0]]: scores[ranking[0]], labels[ranking[1]]: scores[ranking[1]], labels[ranking[2]]: scores[ranking[2]]}
