@@ -1,97 +1,117 @@
-import whoosh.index
-from whoosh.index import *
-from whoosh.fields import *
 import os
 import csv
-import localRoberta
 import nltk
-from nltk.corpus import stopwords
-from nltk.stem.porter import PorterStemmer
+import whoosh
+import numpy as np
+import urllib.request
+from scipy.special import softmax
+from transformers import AutoTokenizer
+from stringProcesser import stringProcesser
+from whoosh.index import open_dir, create_in
+from whoosh.fields import TEXT, NUMERIC, Schema
+from transformers import AutoModelForSequenceClassification
 
 
-def listToString(s):
-    # initialize an empty string
-    str1 = ""
-    # traverse in the string
-    for ele in s:
-        str1 += " " + ele
-    # return string
-    return str1
+class Indexer:
+    __schema = Schema(originalProductTitle=TEXT(stored=True),       # original title of the product
+                      postProductTitle=TEXT(stored=True),           # title of the product after processing
+                      originalReviewTitle=TEXT(stored=True),        # original title of the review
+                      postReviewTitle=TEXT(stored=True),            # title of the review after processing
+                      originalReviewContent=TEXT(stored=True),      # original content of the review
+                      postReviewContent=TEXT(stored=True),          # content of the review after processing
+                      positive=NUMERIC(float, stored=True),     # value of positivity of the originalReviewContent
+                      neutral=NUMERIC(float, stored=True),      # value of neutrality of the originalReviewContent
+                      negative=NUMERIC(float, stored=True))     # value of negativity of the originalReviewContent
+
+    def __init__(self, fileName, indexName):
+        if not os.path.exists(indexName):  # creates the 'indexName' directory if it does not exist
+            os.mkdir(indexName)
+            self.__ix = create_in(indexName, Indexer.__schema)  # creates or overwrites the index in the specified directory
+        else:
+            self.__ix = whoosh.index.open_dir(indexName)
+
+        # TODO: Aggiungere property per __ix
+
+        self.__writer = self.__ix.writer()
+        self.__counter = 0  # counts how many documents have been indexed in the current session
+        self.__fileName = fileName
+
+    def __sentimentAnalyzer(text):
+
+        if not isinstance(text, str):
+            raise TypeError
+
+        task = 'sentiment'
+        MODEL = f'cardiffnlp/twitter-roberta-base-{task}'
+        tokenizer = AutoTokenizer.from_pretrained(MODEL)
+        mapping_link = f'https://raw.githubusercontent.com/cardiffnlp/tweeteval/main/datasets/{task}/mapping.txt'  # downloads the label mapping
+
+        with urllib.request.urlopen(mapping_link) as f:
+            html = f.read().decode('utf-8').split('\n')
+            csvreader = csv.reader(html, delimiter='\t')
+
+        labels = [row[1] for row in csvreader if len(row) > 1]  ##TODO: da togliere dalla versione non OOP
+        model = AutoModelForSequenceClassification.from_pretrained(MODEL)
+        encoded_input = tokenizer(text, return_tensors='pt')
+        output = model(**encoded_input)
+        scores = output[0][0].detach().numpy()
+        scores = softmax(scores)
+
+        ranking = np.argsort(scores)
+        ranking = ranking[::-1]
+
+        return {labels[ranking[0]]: scores[ranking[0]], labels[ranking[1]]: scores[ranking[1]], labels[ranking[2]]: scores[ranking[2]]}
+
+    def indexGenerator(self):
+        with open(self.__fileName, encoding='utf8') as csvFile:
+
+            self.__counter = 0
+            wnl = nltk.WordNetLemmatizer()
+
+            csvReader = csv.reader(csvFile, delimiter=',')
+            next(csvReader)  # skips the first row, which only contains information about the columns
+
+            for i in range(self.__ix.doc_count()):
+                next(csvReader)  # skips rows so that the indexing starts from where it left off
+
+            for row in csvReader:
+                productTitle = row[1]  # Original Product Title
+                reviewTitle = row[17]  # Original Review Title
+                reviewContent = row[16]  # Original Review Content
+
+                processedProductTitle = stringProcesser(productTitle, wnl)
+                processedReviewTitle = stringProcesser(reviewTitle, wnl)
+                processedReviewContent = stringProcesser(reviewContent, wnl)
+
+                try:
+                    sentiment = Indexer.__sentimentAnalyzer(reviewContent)
+                    print(sentiment) # debug
+                    print(f"{self.__ix.doc_count()+self.__counter} / 41420")  # debug
+                    positiveScore = sentiment['positive']
+                    neutralScore = sentiment['neutral']
+                    negativeScore = sentiment['negative']
+
+                    print('preprocessed:', processedReviewContent)  # debug
+                    print('reviewContent:', reviewContent)  # debug
+
+                    self.__writer.add_document(originalProductTitle=productTitle,
+                                               postProductTitle=processedProductTitle,
+                                               originalReviewTitle=reviewTitle,
+                                               postReviewTitle=processedReviewTitle,
+                                               originalReviewContent=reviewContent,
+                                               postReviewContent=processedReviewContent,
+                                               positive=positiveScore,
+                                               neutral=neutralScore,
+                                               negative=negativeScore)
+                except RuntimeError:
+                    print('Runtime error: reviewContent is too long for the sentiment analysis model')
+                except KeyboardInterrupt:
+                    print('Keyboard Interrupt detected')
+                    self.__writer.commit()
+                    exit(-1)
+
+                self.__counter += 1
+
+        self.__writer.commit()
 
 
-def stringProcesser(string, wnl):
-    tokenizedString = nltk.word_tokenize(string)
-    porter = PorterStemmer()
-    processedContent = []
-    for t in tokenizedString:
-        if not t in stopwords.words('english') and not t in processedContent:
-            processedContent.append(porter.stem(wnl.lemmatize(t)))
-
-    return listToString(processedContent)
-
-
-schema = Schema(originalProductTitle=TEXT(stored=True),     # titolo originale del prodotto
-                postProductTitle=TEXT(stored=False),         # titolo del prodotto dopo preprocessing
-                reviewTitle=TEXT(stored=True),
-                originalReviewContent=TEXT(stored=True),    # contenuto originale della recensione
-                postReviewContent=TEXT(stored=False),        # contenuto della recensione dopo preprocessing
-                positive=NUMERIC(float, 32, stored=True),
-                neutral=NUMERIC(float, 32, stored=True),
-                negative=NUMERIC(float, 32, stored=True))
-
-if not os.path.exists("indexdir"):  # creates the directory indexdir if it does not exist
-    os.mkdir("indexdir")
-    ix = create_in("indexdir", schema)  # create_in() removes the index that has been created. In order to update use update_in() (NON SEMBRA ESISTERE??)
-else:
-    ix = whoosh.index.open_dir("indexdir")
-
-writer = ix.writer()
-
-with open("AmazonReviews.csv", encoding="utf8") as csv_file:
-
-    counter = 0
-    wnl = nltk.WordNetLemmatizer()
-
-    csv_reader = csv.reader(csv_file, delimiter=",")
-    next(csv_reader)  # skips the first row
-
-    for i in range(ix.doc_count()):
-        next(csv_reader)  # skips rows
-
-    for row in csv_reader:
-        productTitle = row[1]   # Product Title
-        reviewTitle = row[17]   # Review Title
-        reviewContent = row[16]   # Review Content
-
-        processedContentString = stringProcesser(reviewContent, wnl)
-        processedProductTitleString = stringProcesser(reviewTitle, wnl)
-
-        try:
-            results = localRoberta.localRoberta(reviewContent)
-            #print(results) # debug
-            print(ix.doc_count()+counter, "/", 41420)  # debug
-            positiveScore = results["positive"]
-            neutralScore = results["neutral"]
-            negativeScore = results["negative"]
-
-            print("preprocessed:", processedContentString)  # debug
-            print("reviewContent:", reviewContent)  # debug
-
-            writer.add_document(originalProductTitle=productTitle,
-                                postProductTitle=processedProductTitleString,
-                                reviewTitle=reviewTitle,
-                                originalReviewContent=reviewContent,
-                                postReviewContent=processedContentString,
-                                positive=positiveScore,
-                                neutral=neutralScore,
-                                negative=negativeScore)
-        except RuntimeError:
-            print("Runtime error: reviewContent is too long for the sentiment analysis model")
-        except KeyboardInterrupt:
-            print("Keyboard Interrupt detected")
-            writer.commit()
-            exit(-1)
-
-        counter = counter + 1
-
-writer.commit()
