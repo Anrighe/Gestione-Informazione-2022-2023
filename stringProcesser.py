@@ -21,8 +21,6 @@ def stringProcesser(string, wnl, removeDuplicates=False):
         noPunctuation = noPunctuation.replace(" - ", " ")  # only replace the occurrences of " - " with a whitespace
         #TODO: !!! PER LA VERSIONE NO GUI NON POSSO RIMPIAZZARE I CARATTERI "-" PERCHÈ NE HO BISOGNO PER LA KEYWORD "--sentiment"
 
-        print(f"Before punctuation removal: {string}")
-        print(f"After punctuation removal: {noPunctuation}")
         token = nltk.word_tokenize(noPunctuation)
         porter = PorterStemmer()
         processedContent = []

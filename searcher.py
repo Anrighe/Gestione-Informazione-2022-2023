@@ -1,17 +1,14 @@
 from whoosh import qparser, index
 from whoosh.qparser import QueryParser
-from whoosh.scoring import FunctionWeighting
 from sentimentRanking import SentimentRanking
 
-def noResultManipulation(searcher, fieldname, text, matcher):
-    return 0
 
 class Searcher:
 
     def __init__(self, indexDir, tokenInput, queryList, sentiment, sentimentType):
         self.__indexDir = indexDir
         self.__ix = index.open_dir(indexDir)
-        self.__searcher = self.__ix.searcher(weighting=FunctionWeighting(noResultManipulation))
+        self.__searcher = self.__ix.searcher()
         self.__parser = QueryParser(sentimentType, self.__ix.schema)
         self.__queryList = queryList
         self.__sentiment = sentiment
@@ -36,7 +33,7 @@ class Searcher:
         #for i in self.__finalResult: #debug
             #print(i)
 
-        print(self.__tokenInput) #debug
+        #print(self.__tokenInput) #debug
 
     def ranking(self):
         ranker = SentimentRanking(self.__finalResult, self.__tokenInput, self.__sentiment, self.__sentimentType)

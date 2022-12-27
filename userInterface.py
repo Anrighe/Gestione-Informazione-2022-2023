@@ -14,7 +14,7 @@ class UserInterface:
 
     def userQuery(self):
         sentiment = True
-        sentimentType = 'positive'
+        sentimentType = 'negative'
 
         self.userInput = input('Please insert a user query:')
         self.cleaner = InputCleaner(self.userInput, sentiment=sentiment, sentimentType=sentimentType)
