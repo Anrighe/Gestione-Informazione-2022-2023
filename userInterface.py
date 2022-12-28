@@ -22,18 +22,18 @@ class UserInterface:
         self.__window.geometry(
             self.__geometryCentered(1366, 768, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
 
+       # self.__window.configure(background='gray')  #changes the background of the main window to gray
 
         self.__menuBar = Menu(self.__window)
 
-        # Adding File Menu and commands
+        # Adding File Menu
         self.__file = Menu(self.__menuBar, tearoff=0)
         self.__menuBar.add_cascade(label='File', menu=self.__file)
         self.__file.add_command(label='Select Index...', command=self.__popUpIndexWindow)
-        self.__file.add_command(label='Select Dataset...', command=self.__popUpDatasetWindow)
         self.__file.add_separator()
         self.__file.add_command(label='Exit', command=self.__terminate)
 
-        # Adding Docs Menu and commands
+        # Adding Docs Menu
         self.__docs = Menu(self.__menuBar, tearoff=0)
         self.__menuBar.add_cascade(label='Docs', menu=self.__docs)
         self.__docs.add_command(label='Project', command=self.__openProject)
@@ -52,7 +52,6 @@ class UserInterface:
         self.__searchField.pack(side=LEFT)
         self.__searchButton.pack(side=RIGHT)
 
-
         self.__sentimentSearchFrame = Frame(self.__searchFrame)
 
         self.__positiveRadioButton = Radiobutton(self.__sentimentSearchFrame, text="Positive", value="1", command=self.__setPositiveSentimentType)
@@ -60,17 +59,50 @@ class UserInterface:
         self.__negativeRadioButton = Radiobutton(self.__sentimentSearchFrame, text="Negative", value="3", command=self.__setNegativeSentimentType)
         self.__noSentimentRadioButton = Radiobutton(self.__sentimentSearchFrame, text="No Sentiment", value="4", command=self.__setNoSentimentType)
 
-        self.__positiveRadioButton.pack(side=LEFT, padx=5)
-        self.__neutralRadioButton.pack(side=LEFT, padx=5)
-        self.__negativeRadioButton.pack(side=LEFT, padx=5)
-        self.__noSentimentRadioButton.pack(side=LEFT, padx=5)
+        self.__style = Style()
+        self.__style.configure('changeFgPositive.TRadiobutton', foreground='green', font=("System", 18, "bold"))
+        self.__positiveRadioButton['style'] = 'changeFgPositive.TRadiobutton'
+        self.__style.configure('changeFgNeutral.TRadiobutton', foreground='orange', font=("System", 18, "bold"))
+        self.__neutralRadioButton['style'] = 'changeFgNeutral.TRadiobutton'
+        self.__style.configure('changeFgNegative.TRadiobutton', foreground='red', font=("System", 18, "bold"))
+        self.__negativeRadioButton['style'] = 'changeFgNegative.TRadiobutton'
+        self.__style.configure('changeFgNoSent.TRadiobutton', font=("System", 18, "bold"))
+        self.__noSentimentRadioButton['style'] = 'changeFgNoSent.TRadiobutton'
+
+        self.__title = tkinter.Label(self.__searchFrame, text="Amazon Review Search Engine", fg='#2CDFD4', font=("System", 48, "bold"))
 
 
-        self.__simpleSearchFrame.pack(pady=30)
-        self.__sentimentSearchFrame.pack()
+        self.__positiveRadioButton.pack(side=LEFT, padx=30)
+        self.__neutralRadioButton.pack(side=LEFT, padx=30)
+        self.__negativeRadioButton.pack(side=LEFT, padx=30)
+        self.__noSentimentRadioButton.pack(side=LEFT, padx=30)
+
+        self.__title.pack(side=TOP)
+        self.__simpleSearchFrame.pack(side=TOP, pady=30)
+        self.__sentimentSearchFrame.pack(side=TOP)
 
         self.__searchFrame.pack()
+
+
+        self.__resultFrame = Frame(self.__fullFrame)
+
+        self.__resultList = Listbox(self.__resultFrame, height=30, width=30)
+        self.__resultList.bind('<<ListboxSelect>>', self.__onListSelect)
+        self.__scrollbar = Scrollbar(self.__resultFrame)  # Creating a Scrollbar and attaching it the result frame
+        self.__resultList.config(yscrollcommand=self.__scrollbar.set)
+        self.__scrollbar.config(command=self.__resultList.yview)
+
+
+
+
+        self.__resultList.pack(side=LEFT, fill=BOTH, expand=True, pady=20)
+        self.__scrollbar.pack(side=LEFT, fill=BOTH, expand=True, pady=20)  # Adding Scrollbar to the right of the result list
+        self.__resultFrame.pack(side=LEFT)
+
+
+
         self.__fullFrame.pack()
+
 
         self.__window.mainloop()
 
@@ -111,18 +143,24 @@ class UserInterface:
     def __getEntryIndexData(self):
         self.__indexDir = self.__entryIndex.get()
         if self.__indexDir == '':
-            self.__datasetName = 'sentimentIndex'
+            self.__indexDir = 'sentimentIndex'
         self.__topIndex.destroy()
 
+    def __onListSelect(self, event):
+        indexList = int(event.widget.curselection()[0])
+        value = event.widget.get(indexList)
+        print(f'You selected item {indexList}: "{value}"') # TODO: ASSEGNARE AL TEXT BOX DEL RISULTATO L'ELEMENTO SELEZIONATO ( DA FORMATTARE MEGLIO )
+        print(f'{type(value[0])}') #TODO: DOPO L'INSERIMENTO NELLA LISTBOX I RISULTATI SONO STATI CASTATI A STRINGA -> REGEX??
+
     def __popUpIndexWindow(self):
-        self.__topIndex = Toplevel(self.__window)  # Create a Toplevel window
+        self.__topIndex = Toplevel(self.__window)  # Creates a Toplevel window
         self.__topIndex.title('Select Index')
         self.__topIndex.geometry(self.__geometryCentered(350, 125, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
 
         self.__entryFrameIndex = Frame(self.__topIndex)
         self.__labelIndexTop = Label(self.__entryFrameIndex, text='Please insert the name of the directory containing the Index')
         self.__labelIndexBot = Label(self.__entryFrameIndex, text='\n*The directory needs to be in the same folder of the source files')
-        self.__entryIndex = Entry(self.__entryFrameIndex, width=25, font='16') # Create an Entry Widget in the Toplevel window
+        self.__entryIndex = Entry(self.__entryFrameIndex, width=25, font='16')  # Creates an Entry Widget in the Toplevel window
 
         self.__labelIndexBot.pack(side=BOTTOM)
         self.__entryIndex.pack(side=BOTTOM)
@@ -136,36 +174,6 @@ class UserInterface:
         self.__cancelIndex = Button(self.__buttonFrameIndex, text='Cancel', command=lambda: self.__topIndex.destroy())
         self.__cancelIndex.pack(side=RIGHT, padx=10, pady=5)
         self.__buttonFrameIndex.pack(side=BOTTOM)
-
-
-    def __getEntryDatasetData(self):
-        self.__datasetName = self.__entryDataset.get()
-        if self.__datasetName == '':
-            self.__datasetName = 'AmazonReviews.csv'
-        self.__topDataset.destroy()
-    def __popUpDatasetWindow(self):
-        self.__topDataset = Toplevel(self.__window)  # Create a Toplevel window
-        self.__topDataset.title('Select Dataset')
-        self.__topDataset.geometry(self.__geometryCentered(350, 125, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
-
-        self.__entryFrameDataset = Frame(self.__topDataset)
-        self.__labelDatasetTop = Label(self.__entryFrameDataset, text='Please insert the name of the dataset file (.csv)')
-        self.__labelDatasetBot = Label(self.__entryFrameDataset, text='\n*The dataset needs to be in the same folder of the source files')
-        self.__entryDataset = Entry(self.__entryFrameDataset, width=25, font='16') # Create an Entry Widget in the Toplevel window
-
-        self.__labelDatasetBot.pack(side=BOTTOM)
-        self.__entryDataset.pack(side=BOTTOM)
-        self.__labelDatasetTop.pack(side=BOTTOM)
-        self.__entryDataset.pack(pady=5)
-        self.__entryFrameDataset.pack(side=TOP)
-
-        self.__buttonFrameDataset = Frame(self.__topDataset)  # Creates a Frame for the buttons
-        self.__okDataset = Button(self.__buttonFrameDataset, text='    Ok    ', command=self.__getEntryDatasetData)
-        self.__okDataset.pack(side=LEFT, padx=10, pady=5)
-        self.__cancelDataset = Button(self.__buttonFrameDataset, text='Cancel', command=lambda: self.__topDataset.destroy())
-        self.__cancelDataset.pack(side=RIGHT, padx=10, pady=5)
-        self.__buttonFrameDataset.pack(side=BOTTOM)
-
 
 
     def startIndexing(self):  # funzione di debug per far partire l'indicizzazione
@@ -182,8 +190,11 @@ class UserInterface:
         self.searcher.search()
         resultList = self.searcher.ranking()
 
-        for result in resultList:
+        self.__resultList.delete(0, END)
+        for result in resultList:  # adding results to the GUI list
+            self.__resultList.insert(END, result)
             print(result)
+
 
 
     def __geometryCentered(self, windowWidth, windowHeight, screenWidth, screenHeight):
