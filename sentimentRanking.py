@@ -69,7 +69,7 @@ class SentimentRanking:
             self.__tokenReviewTitle = word_tokenize(result["postReviewTitle"])
             self.__tokenReviewContent = word_tokenize(result["postReviewContent"])
 
-            for word in self.__tokenInput:  ##FISSO word="fire"
+            for word in self.__tokenInput:  ##FISSO word (es: "fire")
 
                 self.__freqProductTitle += self.__tokenProductTitle.count(word) * self.__tokenInput.count(word)
                 self.__freqReviewTitle += self.__tokenReviewTitle.count(word) * self.__tokenInput.count(word)
