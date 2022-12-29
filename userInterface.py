@@ -1,5 +1,7 @@
+from whoosh.searching import Results
+
 from indexer import Indexer
-from searcher import Searcher
+from searcher import SentimentSearcherRanker
 from inputCleaner import InputCleaner
 from tkinter import *
 from tkinter.ttk import *
@@ -11,6 +13,7 @@ class UserInterface:
     def __init__(self):
         self.__indexDir = 'sentimentIndex'
         self.__datasetName = 'AmazonReviews.csv'
+        self.__searched = False
         self.__sentiment = False
         self.__sentimentType = ''
         self.index = Indexer(self.__datasetName, self.__indexDir)
@@ -83,22 +86,31 @@ class UserInterface:
 
         self.__searchFrame.pack()
 
-
         self.__resultFrame = Frame(self.__fullFrame)
 
-        self.__resultList = Listbox(self.__resultFrame, height=30, width=30)
+        self.__resultFrameList = Frame(self.__resultFrame)
+
+        self.__resultList = Listbox(self.__resultFrameList, height=30, width=35)
         self.__resultList.bind('<<ListboxSelect>>', self.__onListSelect)
-        self.__scrollbar = Scrollbar(self.__resultFrame)  # Creating a Scrollbar and attaching it the result frame
-        self.__resultList.config(yscrollcommand=self.__scrollbar.set)
-        self.__scrollbar.config(command=self.__resultList.yview)
+        self.__scrollbarList = Scrollbar(self.__resultFrameList)  # Creating a Scrollbar and attaching it the result frame
+        self.__resultList.config(yscrollcommand=self.__scrollbarList.set)
+        self.__scrollbarList.config(command=self.__resultList.yview)
 
 
-
+        self.__resultFrameDisplayer = Frame(self.__resultFrame)
+        self.__resultDisplayer = Text(self.__resultFrameDisplayer, height=30, width=50)
+        self.__scrollbarDisplayer = Scrollbar(self.__resultFrameDisplayer)
+        self.__resultDisplayer.config(yscrollcommand=self.__scrollbarDisplayer.set)
+        self.__scrollbarDisplayer.config(command=self.__resultDisplayer.yview)
 
         self.__resultList.pack(side=LEFT, fill=BOTH, expand=True, pady=20)
-        self.__scrollbar.pack(side=LEFT, fill=BOTH, expand=True, pady=20)  # Adding Scrollbar to the right of the result list
-        self.__resultFrame.pack(side=LEFT)
+        self.__scrollbarList.pack(side=LEFT, fill=BOTH, expand=True, pady=20)  # Adding Scrollbar to the right of the result list
+        self.__resultFrameList.pack(side=LEFT)
 
+        self.__resultDisplayer.pack(side=LEFT)
+        self.__scrollbarDisplayer.pack(side=RIGHT, fill=BOTH, expand=True)
+        self.__resultFrameDisplayer.pack(side=LEFT)
+        self.__resultFrame.pack()
 
 
         self.__fullFrame.pack()
@@ -147,10 +159,14 @@ class UserInterface:
         self.__topIndex.destroy()
 
     def __onListSelect(self, event):
-        indexList = int(event.widget.curselection()[0])
-        value = event.widget.get(indexList)
-        print(f'You selected item {indexList}: "{value}"') # TODO: ASSEGNARE AL TEXT BOX DEL RISULTATO L'ELEMENTO SELEZIONATO ( DA FORMATTARE MEGLIO )
-        print(f'{type(value[0])}') #TODO: DOPO L'INSERIMENTO NELLA LISTBOX I RISULTATI SONO STATI CASTATI A STRINGA -> REGEX??
+        if self.__searched:
+            if self.__searchResult:
+                indexList = int(event.widget.curselection()[0])
+                value = event.widget.get(indexList)
+
+                print(f'You selected item {indexList}: "{value}"') # TODO: ASSEGNARE AL TEXT BOX DEL RISULTATO L'ELEMENTO SELEZIONATO ( DA FORMATTARE MEGLIO )
+                print(f'{type(value[0])}') #TODO: DOPO L'INSERIMENTO NELLA LISTBOX I RISULTATI SONO STATI CASTATI A STRINGA -> REGEX??
+
 
     def __popUpIndexWindow(self):
         self.__topIndex = Toplevel(self.__window)  # Creates a Toplevel window
@@ -186,14 +202,18 @@ class UserInterface:
 
         self.cleaner = InputCleaner(self.userInput, sentiment=self.__sentiment, sentimentType=self.__sentimentType)
         self.queryList = self.cleaner.query
-        self.searcher = Searcher('sentimentIndex', self.cleaner.tokenInput, self.queryList, sentiment=self.__sentiment, sentimentType=self.__sentimentType)
+        self.searcher = SentimentSearcherRanker('sentimentIndex', self.cleaner.tokenInput, self.queryList, sentiment=self.__sentiment, sentimentType=self.__sentimentType)
         self.searcher.search()
-        resultList = self.searcher.ranking()
+        self.__searchResult = self.searcher.ranking()
+        self.__searched = True
 
         self.__resultList.delete(0, END)
-        for result in resultList:  # adding results to the GUI list
-            self.__resultList.insert(END, result)
+
+
+        for result in self.__searchResult:  # adding results to the GUI list
+            self.__resultList.insert(END, result[0]["originalReviewTitle"])
             print(result)
+
 
 
 

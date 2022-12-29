@@ -13,7 +13,7 @@ def stringProcesser(string, wnl, removeDuplicates=False):
         When True   -> User Query
     """
 
-    if isinstance(string, str):
+    if isinstance(string, str):  # si potrebbe mettere un assert al posto dell'if?
 
         # removes all the punctuation from the string expect for the char "-"
         noPunctuation = string.translate(str.maketrans('', '', '''!"#$%&\'()*+,./:;<=>?@[\\]^_`{|}~'''))

@@ -1,51 +1,62 @@
 from whoosh import qparser, index
 from whoosh.qparser import QueryParser
 from sentimentRanking import SentimentRanking
+from abc import ABC, abstractmethod
 
 
-class Searcher:
+class BaseSearcher(ABC):
+
+    @abstractmethod
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def search(self):
+        pass
+
+
+class SentimentSearcher(BaseSearcher):
 
     def __init__(self, indexDir, tokenInput, queryList, sentiment, sentimentType):
-        self.__indexDir = indexDir
-        self.__ix = index.open_dir(indexDir)
-        self.__searcher = self.__ix.searcher()
-        self.__parser = QueryParser(sentimentType, self.__ix.schema)
-        self.__queryList = queryList
-        self.__sentiment = sentiment
-        self.__tokenInput = tokenInput
-        self.__sentimentType = sentimentType
+        self._indexDir = indexDir
+        self._ix = index.open_dir(indexDir)
+        self._searcher = self._ix.searcher()
+        self._parser = QueryParser(sentimentType, self._ix.schema)
+        self._queryList = queryList
+        self._sentiment = sentiment
+        self._tokenInput = tokenInput
+        self._sentimentType = sentimentType
 
     def search(self):
 
-        self.__finalResult = self.__searcher.search(self.__parser.parse(self.__queryList[0]), limit=None)
-        self.__finalResult.extend(self.__searcher.search(self.__parser.parse(self.__queryList[1]), limit=None))
-        self.__finalResult.extend(self.__searcher.search(self.__parser.parse(self.__queryList[2]), limit=None))
+        self._finalResult = self._searcher.search(self._parser.parse(self._queryList[0]), limit=None)
+        self._finalResult.extend(self._searcher.search(self._parser.parse(self._queryList[1]), limit=None))
+        self._finalResult.extend(self._searcher.search(self._parser.parse(self._queryList[2]), limit=None))
 
-        if self.__sentiment:
+        if self._sentiment:
+            self._resultSentiment = self._searcher.search(self._parser.parse(self._queryList[3]))
 
-            #TODO: EFFETTUARE CONTROLLI PRIMA DI CANCELLARE I COMMENTI SOTTOSTANTI
-            #self.__ix = index.open_dir(self.__indexDir)
-            #self.__parser = qparser.QueryParser(self.__sentimentType, self.__ix.schema)
-            #self.__sentimentQuery = self.__parser.parse(self.__queryList[3])
-            #self.__searcher = self.__ix.searcher()
-
-            #self.__resultSentiment = self.__searcher.search(self.__sentimentQuery)
-
-
-            self.__resultSentiment = self.__searcher.search(self.__parser.parse(self.__queryList[3]))
-
-            if self.__resultSentiment.is_empty():  # the function filter doesn't actually filter if resultSentiment is empty
-                self.__finalResult = self.__resultSentiment
+            if self._resultSentiment.is_empty():  # the function filter doesn't actually filter if resultSentiment is empty
+                self._finalResult = self._resultSentiment
             else:
-                self.__finalResult.filter(self.__resultSentiment)  # intersection
+                self._finalResult.filter(self._resultSentiment)  # intersection
 
-        #for i in self.__finalResult: #debug
-            #print(i)
+        for i in self._finalResult: #debug
+            print(i)
 
-        #print(self.__tokenInput) #debug
+        #print(self._tokenInput) #debug
+
+
+class SentimentSearcherRanker(SentimentSearcher):
+
+    def __init__(self, indexDir, tokenInput, queryList, sentiment, sentimentType):
+        super().__init__(indexDir, tokenInput, queryList, sentiment, sentimentType)
+
+    def search(self):
+        super().search()
 
     def ranking(self):
-        ranker = SentimentRanking(self.__finalResult, self.__tokenInput, self.__sentiment, self.__sentimentType)
+        ranker = SentimentRanking(self._finalResult, self._tokenInput, self._sentiment, self._sentimentType)
         resultList = ranker.calculateRank()
         return resultList
 
