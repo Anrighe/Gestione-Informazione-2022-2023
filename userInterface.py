@@ -123,7 +123,7 @@ class UserInterface:
 
 
         self.__resultFrameDisplayer = Frame(self.__resultFrame)
-        self.__resultDisplayer = Text(self.__resultFrameDisplayer, height=30, width=65)
+        self.__resultDisplayer = Text(self.__resultFrameDisplayer, height=30, width=65, wrap=WORD)
         self.__resultDisplayer.tag_config('reviewTitle', foreground='blue', font=('System', 30, 'bold', 'underline'))
         self.__resultDisplayer.tag_config('productTitle', foreground='dark blue', font=('System', 25, 'bold'))
         self.__resultDisplayer.tag_config('reviewContent', font=('System', 20))
