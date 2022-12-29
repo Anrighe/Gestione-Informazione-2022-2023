@@ -63,7 +63,7 @@ class UserInterface:
 
         self.__simpleSearchFrame = Frame(self.__searchFrame)
         self.__searchField = Entry(self.__simpleSearchFrame, width=35, font=('Microsoft Yi Baiti', 36))
-        self.__searchButton = tkinter.Button(self.__simpleSearchFrame, text='Search', height=3, width=10, command=self.userQuery)
+        self.__searchButton = tkinter.Button(self.__simpleSearchFrame, text='Search', height=1, width=6, command=self.userQuery, font=('System', 18, 'bold'), fg='dark blue')
         self.__searchField.pack(side=LEFT)
         self.__searchButton.pack(side=RIGHT)
 
@@ -148,9 +148,8 @@ class UserInterface:
         self.__ax = self.__figure.add_subplot(111)
         self.__bar = FigureCanvasTkAgg(self.__figure, self.__statsFrame)
         self.__bar.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
-
         self.__ax.clear()
-        self.__setGraph(0.0, 0.0, 0.0)
+        self.__setGraph(0.0, 0.0, 0.0, True)
 
         self.__resultInfo = Label(self.__statsFrame, text='\n', font=('System', 18))
         self.__resultInfo.pack(side=BOTTOM, pady=83)
@@ -204,10 +203,10 @@ class UserInterface:
             self.__indexDir = 'sentimentIndex'
         self.__topIndex.destroy()
 
-    def __setGraph(self, positive, neutral, negative):
+    def __setGraph(self, positive, neutral, negative, legendState):
         self.__dataFrame = pd.DataFrame({'Positive': [positive], 'Neutral': [neutral], 'Negative': [negative]})
         self.__ax.clear()
-        self.__dataFrame.plot(kind='bar', legend=True, ax=self.__ax, color=['green', 'orange', 'red'])
+        self.__dataFrame.plot(kind='bar', legend=legendState, ax=self.__ax, color=['green', 'orange', 'red'])
         self.__bar.draw()
 
     def __onListSelect(self, event):
@@ -227,7 +226,7 @@ class UserInterface:
 
                 self.__setGraph(self.__searchResult[indexList][0]['positive'],
                                 self.__searchResult[indexList][0]['neutral'],
-                                self.__searchResult[indexList][0]['negative'])
+                                self.__searchResult[indexList][0]['negative'], False)
 
                 #print(f'You selected item {indexList}: '{value}'')  # debug
 
@@ -254,6 +253,18 @@ class UserInterface:
         self.__cancelIndex.pack(side=RIGHT, padx=10, pady=5)
         self.__buttonFrameIndex.pack(side=BOTTOM)
 
+    def __popUpMissingQuery(self):
+        self.__topMissingQuery = Toplevel(self.__window)  # Creates a Toplevel window
+        self.__topMissingQuery.title('Missing query!')
+        self.__topMissingQuery.geometry(self.__geometryCentered(250, 100, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
+
+        self.__labelMissingQuery = Label(self.__topMissingQuery, text='Please insert a query before searching')
+        self.__okMissingQuery = Button(self.__topMissingQuery, text='    Ok    ', command=lambda: self.__topMissingQuery.destroy())
+
+        self.__okMissingQuery.pack(side=BOTTOM, pady=15)
+        self.__labelMissingQuery.pack(side=BOTTOM, pady=0)
+
+
     def startIndexing(self):  # funzione di debug per far partire l'indicizzazione
         self.index.indexGenerator()
 
@@ -262,18 +273,21 @@ class UserInterface:
         print(f'QUERY:{self.userInput}')
         print(f'SENTIMENT:({self.__sentiment}, {self.__sentimentType})')
 
-        self.cleaner = InputCleaner(self.userInput, sentiment=self.__sentiment, slider=self.__slider.getValues(), sentimentType=self.__sentimentType)
-        self.queryList = self.cleaner.query
-        self.searcher = SentimentSearcherRanker('sentimentIndex', self.cleaner.tokenInput, self.queryList, sentiment=self.__sentiment, sentimentType=self.__sentimentType)
+        if self.userInput != '':
+            self.cleaner = InputCleaner(self.userInput, sentiment=self.__sentiment, slider=self.__slider.getValues(), sentimentType=self.__sentimentType)
+            self.queryList = self.cleaner.query
+            self.searcher = SentimentSearcherRanker('sentimentIndex', self.cleaner.tokenInput, self.queryList, sentiment=self.__sentiment, sentimentType=self.__sentimentType)
 
-        self.__searchAndRank()
-        self.__searched = True
+            self.__searchAndRank()
+            self.__searched = True
 
-        self.__resultList.delete(0, END)
+            self.__resultList.delete(0, END)
 
-        for result in self.__searchResult:  # adding results to the GUI list
-            self.__resultList.insert(END, result[0]['originalReviewTitle'])
-            print(result)
+            for result in self.__searchResult:  # adding results to the GUI list
+                self.__resultList.insert(END, result[0]['originalReviewTitle'])
+                print(result)
+        else:
+            self.__popUpMissingQuery()
 
     def __geometryCentered(self, windowWidth, windowHeight, screenWidth, screenHeight):
         return '{}x{}+{}+{}'.format(windowWidth,
