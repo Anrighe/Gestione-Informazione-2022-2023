@@ -4,7 +4,7 @@ from stringProcesser import stringProcesser
 
 
 class InputCleaner:
-    def __init__(self, input, sentiment, sentimentType=''):
+    def __init__(self, input, sentiment, slider, sentimentType=''):
         self.__rawUserInput = input  ## e.g: Apple Watched 8
         self.__wnl = nltk.WordNetLemmatizer()
         self.__processedUserInput = stringProcesser(self.__rawUserInput, self.__wnl, True)  # e.g.: apple watch 8
@@ -20,7 +20,7 @@ class InputCleaner:
                             f'postReviewContent:{self.__processedReviewContent}']
 
         if sentiment:
-            self.__queryList.append(f'{sentimentType}:[0.33 TO 1.0]')
+            self.__queryList.append(f'{sentimentType}:[{round(slider[0],2)} TO {round(slider[1],2)}]')
 
     @property
     def processedUserInput(self):
