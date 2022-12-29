@@ -234,6 +234,7 @@ class UserInterface:
         self.__topIndex = Toplevel(self.__window)  # Creates a Toplevel window
         self.__topIndex.title('Select Index')
         self.__topIndex.geometry(self.__geometryCentered(350, 125, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
+        self.__topIndex.resizable(False, False)
 
         self.__entryFrameIndex = Frame(self.__topIndex)
         self.__labelIndexTop = Label(self.__entryFrameIndex, text='Please insert the name of the directory containing the Index')
@@ -257,6 +258,7 @@ class UserInterface:
         self.__topMissingQuery = Toplevel(self.__window)  # Creates a Toplevel window
         self.__topMissingQuery.title('Missing query!')
         self.__topMissingQuery.geometry(self.__geometryCentered(250, 100, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
+        self.__topMissingQuery.resizable(False, False)
 
         self.__labelMissingQuery = Label(self.__topMissingQuery, text='Please insert a query before searching')
         self.__okMissingQuery = Button(self.__topMissingQuery, text='    Ok    ', command=lambda: self.__topMissingQuery.destroy())
