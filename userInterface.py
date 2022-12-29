@@ -1,11 +1,23 @@
 from whoosh.searching import Results
-
+import time
 from indexer import Indexer
 from searcher import SentimentSearcherRanker
 from inputCleaner import InputCleaner
 from tkinter import *
 from tkinter.ttk import *
 import tkinter
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+
+def timeDecorator(func):
+    def inner(self):
+        start = time.perf_counter()
+        func(self)
+        end = time.perf_counter()
+        self.resultInfo.config(text=f'{len(self.searchResult)} results\n({round(end-start, 4)} seconds)')
+    return inner
 
 
 class UserInterface:
@@ -90,7 +102,11 @@ class UserInterface:
 
         self.__resultFrameList = Frame(self.__resultFrame)
 
-        self.__resultList = Listbox(self.__resultFrameList, height=30, width=35)
+
+        # The <<ListboxSelect>> event was designed to fire whenever the selection changes, no matter how it changes.
+        # That could mean when the user selects something new in the listbox, or when the selection is removed from the listbox.
+        # By setting exportselection to False, the selection won't change just because another widget gets some or all of its data selected
+        self.__resultList = Listbox(self.__resultFrameList, height=30, width=35, exportselection=False)
         self.__resultList.bind('<<ListboxSelect>>', self.__onListSelect)
         self.__scrollbarList = Scrollbar(self.__resultFrameList)  # Creating a Scrollbar and attaching it the result frame
         self.__resultList.config(yscrollcommand=self.__scrollbarList.set)
@@ -98,7 +114,11 @@ class UserInterface:
 
 
         self.__resultFrameDisplayer = Frame(self.__resultFrame)
-        self.__resultDisplayer = Text(self.__resultFrameDisplayer, height=30, width=50)
+        self.__resultDisplayer = Text(self.__resultFrameDisplayer, height=30, width=65)
+        self.__resultDisplayer.tag_config('reviewTitle', foreground="blue", font=("System", 30, "bold", 'underline'))
+        self.__resultDisplayer.tag_config('productTitle', foreground="dark blue", font=("System", 25, "bold"))
+        self.__resultDisplayer.tag_config('reviewContent', font=("System", 20))
+
         self.__scrollbarDisplayer = Scrollbar(self.__resultFrameDisplayer)
         self.__resultDisplayer.config(yscrollcommand=self.__scrollbarDisplayer.set)
         self.__scrollbarDisplayer.config(command=self.__resultDisplayer.yview)
@@ -113,12 +133,36 @@ class UserInterface:
         self.__resultFrame.pack()
 
 
-        self.__fullFrame.pack()
+        self.__statsFrame = Frame(self.__resultFrame)
 
+
+        self.__figure = plt.Figure(figsize=(2.5, 2.5), dpi=100)
+        self.__ax = self.__figure.add_subplot(111)
+        self.__bar = FigureCanvasTkAgg(self.__figure, self.__statsFrame)
+        self.__bar.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
+
+        self.__ax.clear()
+        self.__setGraph(0.0, 0.0, 0.0)
+
+
+        self.__resultInfo = Label(self.__statsFrame, text='', font=("System", 18))
+        self.__resultInfo.pack(side=BOTTOM, pady=83)
+
+
+        self.__statsFrame.pack(side=LEFT)
+
+        self.__fullFrame.pack()
 
         self.__window.mainloop()
 
 
+    @property
+    def resultInfo(self):
+        return self.__resultInfo
+
+    @property
+    def searchResult(self):
+        return self.__searchResult
 
     def __terminate(self):
         exit(0)
@@ -158,14 +202,41 @@ class UserInterface:
             self.__indexDir = 'sentimentIndex'
         self.__topIndex.destroy()
 
+    def __onTextSelect(self, event):
+        print("ONTEXTSELECT")
+        pass
+
+    def __setGraph(self, positive, neutral, negative):
+        self.__dataFrame = pd.DataFrame({'Positive': [positive], 'Neutral': [neutral], 'Negative': [negative]})
+        self.__ax.clear()
+        self.__dataFrame.plot(kind='bar', legend=True, ax=self.__ax, color=['green', 'orange', 'red'])
+        self.__bar.draw()
+
+
+
+
+
     def __onListSelect(self, event):
         if self.__searched:
             if self.__searchResult:
                 indexList = int(event.widget.curselection()[0])
-                value = event.widget.get(indexList)
+                #value = event.widget.get(indexList) #debug
 
-                print(f'You selected item {indexList}: "{value}"') # TODO: ASSEGNARE AL TEXT BOX DEL RISULTATO L'ELEMENTO SELEZIONATO ( DA FORMATTARE MEGLIO )
-                print(f'{type(value[0])}') #TODO: DOPO L'INSERIMENTO NELLA LISTBOX I RISULTATI SONO STATI CASTATI A STRINGA -> REGEX??
+                self.__resultDisplayer.config(state=NORMAL)
+                self.__resultDisplayer.delete('1.0', END)
+                self.__resultDisplayer.insert(1.0, self.__searchResult[indexList][0]["originalReviewContent"], 'reviewContent')
+                self.__resultDisplayer.insert(1.0, "\n\n")
+                self.__resultDisplayer.insert(1.0, self.__searchResult[indexList][0]["originalProductTitle"], 'productTitle')
+                self.__resultDisplayer.insert(1.0, "\n\n")
+                self.__resultDisplayer.insert(1.0, self.__searchResult[indexList][0]["originalReviewTitle"], 'reviewTitle')
+                self.__resultDisplayer.config(state=DISABLED)
+
+                self.__setGraph(self.__searchResult[indexList][0]["positive"],
+                                self.__searchResult[indexList][0]["neutral"],
+                                self.__searchResult[indexList][0]["negative"])
+
+                #print(f'You selected item {indexList}: "{value}"')  # debug
+
 
 
     def __popUpIndexWindow(self):
@@ -192,6 +263,7 @@ class UserInterface:
         self.__buttonFrameIndex.pack(side=BOTTOM)
 
 
+
     def startIndexing(self):  # funzione di debug per far partire l'indicizzazione
         self.index.indexGenerator()
 
@@ -203,8 +275,13 @@ class UserInterface:
         self.cleaner = InputCleaner(self.userInput, sentiment=self.__sentiment, sentimentType=self.__sentimentType)
         self.queryList = self.cleaner.query
         self.searcher = SentimentSearcherRanker('sentimentIndex', self.cleaner.tokenInput, self.queryList, sentiment=self.__sentiment, sentimentType=self.__sentimentType)
-        self.searcher.search()
-        self.__searchResult = self.searcher.ranking()
+
+
+        self.__searchAndRank()
+
+        #self.searcher.search()
+        #self.__searchResult = self.searcher.ranking()
+
         self.__searched = True
 
         self.__resultList.delete(0, END)
@@ -224,6 +301,8 @@ class UserInterface:
                                     int((screenHeight / 2) - (windowHeight / 2)))
 
 
-
-
+    @timeDecorator
+    def __searchAndRank(self):
+        self.searcher.search()
+        self.__searchResult = self.searcher.ranking()
 
