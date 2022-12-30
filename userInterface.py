@@ -1,18 +1,22 @@
-from whoosh.searching import Results
+import os
 import time
-from indexer import Indexer
-from searcher import SentimentSearcherRanker
-from inputCleaner import InputCleaner
-from tkinter import *
-from tkinter.ttk import *
 import tkinter
 import pandas as pd
+from tkinter import *
+from tkinter.ttk import *
+from indexer import Indexer
 import matplotlib.pyplot as plt
+from inputCleaner import InputCleaner
+from searcher import SentimentSearcherRanker
+from RangeSlider.RangeSlider import RangeSliderH
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from RangeSlider.RangeSlider import RangeSliderH, RangeSliderV
 
 
 def timeDecorator(func):
+    """Decorates a function and measures its execution time
+
+    :param func: function that needs to be measured
+    """
     def inner(self):
         start = time.perf_counter()
         func(self)
@@ -22,24 +26,43 @@ def timeDecorator(func):
 
 
 class UserInterface:
+    """Class that implements the GUI and acts as a **mediator**, by coordinating all other objects.
+
+    (e.g.: When a interaction of a GUI object happens, the mediator notifies every other object that
+    needs to know that event happened)
+    """
     def __init__(self):
-        self.__indexDir = 'sentimentIndex'
-        self.__datasetName = 'AmazonReviews.csv'
-        self.__searched = False
-        self.__sentiment = False
-        self.__sentimentType = ''
-        self.index = Indexer(self.__datasetName, self.__indexDir)
+        """Class that implements the GUI and acts as a **mediator**, by coordinating all other objects.
+
+        (e.g.: When a interaction of a GUI object happens, the mediator notifies every other object that
+        needs to know that event happened)
+        """
+        try:
+            assert os.name == 'nt1' or os.name == 'posix1'  #TODO: DA RIGUARDARE
+            if os.name == 'nt':
+                self.__fileSystemSeparator = WindowsFileSystemSeparator()
+            elif os.name == 'posix':
+                self.__fileSystemSeparator = PosixFileSystemSeparator()
+
+        except AssertionError:
+            self.__fileSystemSeparator = NotSupportedOS()
+
+        self.__indexDir = 'sentimentIndex'  # setting the standard Index folder name
+        self.__datasetName = 'AmazonReviews.csv'  # setting the standard Dataset file name  #TODO: ELIMINABILE?
+        self.__searched = False  # False if a search has never been done
+        self.__sentiment = False  # False if the user isn't looking for
+        self.__sentimentType = ''  # Contains the sentiment type the user is looking for (e.g.: 'positive')
+        self.index = Indexer(self.__datasetName, self.__indexDir)  #TODO: CANCELLABILE?
         self.userInput = ''
-        self.__window = Tk()
+
+        self.__window = Tk()  # Creating Tkinter window
         self.__window.title(
             '''Progetto Gestione dell'Informazione 2022-2023  -  Search Engine per Recensioni di Prodotti Amazon  -  Enrico Marras (152336), Lorenzo Colli (153063), Mattia Lazzarini (152833)''')
-
         self.__window.geometry(
             self.__geometryCentered(1366, 800, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
 
-        #self.__window.configure(background='gray')  #changes the background of the main window to gray
-
-        self.__menuBar = Menu(self.__window)
+        self.__menuBar = Menu(self.__window)  # Creating the Menu Bar
+        self.__window.config(menu=self.__menuBar)  # Displays the Menu in the window
 
         # Adding File Menu
         self.__file = Menu(self.__menuBar, tearoff=0)
@@ -56,32 +79,24 @@ class UserInterface:
         self.__docs.add_command(label='README', command=self.__openReadme)
         self.__docs.add_command(label='Benchmark', command=self.__openBenchmark)
 
-        self.__window.config(menu=self.__menuBar)  # displays the Menu
+        self.__fullFrame = Frame(self.__window)  # fullFrame contains: searchFrame, resultFrame
+        self.__searchFrame = Frame(self.__fullFrame)  # searchFrame contains: simpleSearchFrame, sentimentSearchFrame
 
-        self.__fullFrame = Frame(self.__window)
-        self.__searchFrame = Frame(self.__fullFrame)
-
-        self.__simpleSearchFrame = Frame(self.__searchFrame)
+        # Search Bar and 'Search' Button
+        self.__simpleSearchFrame = Frame(self.__searchFrame)  # simpleSearchFrame contains: searchField, searchButton
         self.__searchField = Entry(self.__simpleSearchFrame, width=35, font=('Microsoft Yi Baiti', 36))
         self.__searchButton = tkinter.Button(self.__simpleSearchFrame, text='Search', height=1, width=6, command=self.userQuery, font=('System', 18, 'bold'), fg='dark blue')
         self.__searchField.pack(side=LEFT)
         self.__searchButton.pack(side=RIGHT)
 
+        # sentimentSearchFrame contains: sentiment multi-selection radio buttons, slider
         self.__sentimentSearchFrame = Frame(self.__searchFrame)
 
+        # Sentiment Radio Buttons
         self.__positiveRadioButton = Radiobutton(self.__sentimentSearchFrame, text='Positive', value='1', command=self.__setPositiveSentimentType)
         self.__neutralRadioButton = Radiobutton(self.__sentimentSearchFrame, text='Neutral', value='2', command=self.__setNeutralSentimentType)
         self.__negativeRadioButton = Radiobutton(self.__sentimentSearchFrame, text='Negative', value='3', command=self.__setNegativeSentimentType)
         self.__noSentimentRadioButton = Radiobutton(self.__sentimentSearchFrame, text='No Sentiment', value='4', command=self.__setNoSentimentType)
-
-        # Horizontal range slider
-        self.__leftHandle = DoubleVar()  # left handle variable
-        self.__rightHandle = DoubleVar()  # right handle variable
-        self.__slider = RangeSliderH(self.__sentimentSearchFrame,
-                                     [self.__leftHandle, self.__rightHandle],
-                                     Width=200, Height=65, padX=11,
-                                     min_val=0, max_val=1, show_value=True) # es: bgColor='#660000' per cambiare colore
-
 
         self.__style = Style()
         self.__style.configure('changeFgPositive.TRadiobutton', foreground='green', font=('System', 18, 'bold'))
@@ -93,41 +108,46 @@ class UserInterface:
         self.__style.configure('changeFgNoSent.TRadiobutton', font=('System', 18, 'bold'))
         self.__noSentimentRadioButton['style'] = 'changeFgNoSent.TRadiobutton'
 
+        # Horizontal range slider
+        self.__leftHandle = DoubleVar()  # Left handle variable
+        self.__rightHandle = DoubleVar()  # Right handle variable
+        self.__slider = RangeSliderH(self.__sentimentSearchFrame,
+                                     [self.__leftHandle, self.__rightHandle],
+                                     Width=200, Height=65, padX=11,
+                                     min_val=0, max_val=1, show_value=True)  # TODO: es: bgColor='#660000' per cambiare colore
+
+        # Title over the Search Bar
         self.__title = tkinter.Label(self.__searchFrame, text='Amazon Review Search Engine', fg='#2CDFD4', font=('System', 48, 'bold'))
 
         self.__positiveRadioButton.pack(side=LEFT, padx=20)
         self.__neutralRadioButton.pack(side=LEFT, padx=20)
         self.__negativeRadioButton.pack(side=LEFT, padx=20)
         self.__noSentimentRadioButton.pack(side=LEFT, padx=20)
-
-        self.__slider.pack(side=LEFT, padx=30)  # or grid or place method could be used
-
+        self.__slider.pack(side=LEFT, padx=30)
         self.__title.pack(side=TOP)
+
         self.__simpleSearchFrame.pack(side=TOP, pady=30)
         self.__sentimentSearchFrame.pack(side=TOP)
-
         self.__searchFrame.pack()
 
-        self.__resultFrame = Frame(self.__fullFrame)
-
-        self.__resultFrameList = Frame(self.__resultFrame)
+        self.__resultFrame = Frame(self.__fullFrame)  # resultFrame contains: resultFrameList, resultFrameDisplayer, statsFrame
+        self.__resultFrameList = Frame(self.__resultFrame)  # resultFrameList contains: resultList and scrollbarList
 
         # The <<ListboxSelect>> event was designed to fire whenever the selection changes, no matter how it changes.
         # That could mean when the user selects something new in the listbox, or when the selection is removed from the listbox.
-        # By setting exportselection to False, the selection won't change just because another widget gets some or all of its data selected
+        # By setting 'exportselection' to False, the selection won't change just because another widget gets some or all of its data selected
         self.__resultList = Listbox(self.__resultFrameList, height=30, width=35, exportselection=False)
-        self.__resultList.bind('<<ListboxSelect>>', self.__onListSelect)
+        self.__resultList.bind('<<ListboxSelect>>', self.__onListSelect)  # Binding the onListSelect to the even sequence <<ListboxSelect>>
         self.__scrollbarList = Scrollbar(self.__resultFrameList)  # Creating a Scrollbar and attaching it the result frame
         self.__resultList.config(yscrollcommand=self.__scrollbarList.set)
         self.__scrollbarList.config(command=self.__resultList.yview)
 
-
-        self.__resultFrameDisplayer = Frame(self.__resultFrame)
+        # Adding the text displayer for the selected document
+        self.__resultFrameDisplayer = Frame(self.__resultFrame)  # resultFrameDisplayer contains: resultDisplayer, scrollbarDisplayer
         self.__resultDisplayer = Text(self.__resultFrameDisplayer, height=30, width=65, wrap=WORD)
         self.__resultDisplayer.tag_config('reviewTitle', foreground='blue', font=('System', 30, 'bold', 'underline'))
         self.__resultDisplayer.tag_config('productTitle', foreground='dark blue', font=('System', 25, 'bold'))
         self.__resultDisplayer.tag_config('reviewContent', font=('System', 20))
-
         self.__scrollbarDisplayer = Scrollbar(self.__resultFrameDisplayer)
         self.__resultDisplayer.config(yscrollcommand=self.__scrollbarDisplayer.set)
         self.__scrollbarDisplayer.config(command=self.__resultDisplayer.yview)
@@ -141,9 +161,8 @@ class UserInterface:
         self.__resultFrameDisplayer.pack(side=LEFT)
         self.__resultFrame.pack()
 
-
-        self.__statsFrame = Frame(self.__resultFrame)
-
+        # Adding the sentiment histogram for the selected document
+        self.__statsFrame = Frame(self.__resultFrame)  # statsFrame contains: figure, resultInfo
         self.__figure = plt.Figure(figsize=(2.5, 2.5), dpi=100)
         self.__ax = self.__figure.add_subplot(111)
         self.__bar = FigureCanvasTkAgg(self.__figure, self.__statsFrame)
@@ -151,12 +170,18 @@ class UserInterface:
         self.__ax.clear()
         self.__setGraph(0.0, 0.0, 0.0, True)
 
+        # Adding the search stats (# results, (time))
         self.__resultInfo = Label(self.__statsFrame, text='\n', font=('System', 18))
         self.__resultInfo.pack(side=BOTTOM, pady=83)
 
         self.__statsFrame.pack(side=LEFT)
-        self.__fullFrame.pack()
+        self.__fullFrame.pack(fill=BOTH, expand=True)
+
+
         self.__window.mainloop()
+
+    def fun(self):
+        pass
 
     @property
     def resultInfo(self):
@@ -166,20 +191,18 @@ class UserInterface:
     def searchResult(self):
         return self.__searchResult
 
-    def __terminate(self):
+    @staticmethod #TODO: DA PROVARE
+    def __terminate():
         exit(0)
 
     def __openProject(self):
-        import os
-        os.startfile('Docs\\progGestI-22-23.pdf')
+        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}progGestI-22-23.pdf')  # Duck Typing
 
     def __openReadme(self):
-        import os
-        os.startfile('Docs\\README.txt')
+        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}README.txt')  # Duck Typing
 
     def __openBenchmark(self):
-        import os
-        os.startfile('Docs\\BENCHMARK.txt')
+        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}BENCHMARK.txt')  # Duck Typing
 
     def __setPositiveSentimentType(self):
         self.__sentiment = True
@@ -302,3 +325,15 @@ class UserInterface:
         self.searcher.search()
         self.__searchResult = self.searcher.ranking()
 
+
+class WindowsFileSystemSeparator:
+    def getSeparator(self): return '\\\\'
+
+
+class PosixFileSystemSeparator:
+    def getSeparator(self): return '/'
+
+
+class NotSupportedOS:
+    def getSeparator(self):
+        raise OSError

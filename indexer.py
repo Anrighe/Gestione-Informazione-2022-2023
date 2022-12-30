@@ -36,6 +36,7 @@ class Indexer:
         self.__counter = 0  # counts how many documents have been indexed in the current session
         self.__fileName = fileName
 
+    @staticmethod  # TODO: DA TESTARE
     def __sentimentAnalyzer(text):
 
         if not isinstance(text, str):
