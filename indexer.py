@@ -13,32 +13,41 @@ from transformers import AutoModelForSequenceClassification
 
 
 class Indexer:
-    __schema = Schema(originalProductTitle=TEXT(stored=True),       # original title of the product
-                      postProductTitle=TEXT(stored=True),           # title of the product after processing
-                      originalReviewTitle=TEXT(stored=True),        # original title of the review
-                      postReviewTitle=TEXT(stored=True),            # title of the review after processing
-                      originalReviewContent=TEXT(stored=True),      # original content of the review
-                      postReviewContent=TEXT(stored=True),          # content of the review after processing
+    """Class used for indexing the supplied dataset"""
+    __schema = Schema(originalProductTitle=TEXT(stored=True),   # original title of the product
+                      postProductTitle=TEXT(stored=True),       # title of the product after processing
+                      originalReviewTitle=TEXT(stored=True),    # original title of the review
+                      postReviewTitle=TEXT(stored=True),        # title of the review after processing
+                      originalReviewContent=TEXT(stored=True),  # original content of the review
+                      postReviewContent=TEXT(stored=True),      # content of the review after processing
                       positive=NUMERIC(float, stored=True),     # value of positivity of the originalReviewContent
                       neutral=NUMERIC(float, stored=True),      # value of neutrality of the originalReviewContent
                       negative=NUMERIC(float, stored=True))     # value of negativity of the originalReviewContent
 
     def __init__(self, fileName, indexName):
-        if not os.path.exists(indexName):  # creates the 'indexName' directory if it does not exist
-            os.mkdir(indexName)
+        """
+        :param fileName: dataset file (.csv)
+        :param indexName: directory in which the Indexing will take place
+        """
+        if not os.path.exists(indexName):
+            os.mkdir(indexName)  # creates a new 'indexName' directory if it does not exist
             self.__ix = create_in(indexName, Indexer.__schema)  # creates or overwrites the index in the specified directory
         else:
-            self.__ix = whoosh.index.open_dir(indexName)
-
-        # TODO: Aggiungere property per __ix
+            self.__ix = whoosh.index.open_dir(indexName)  # opens the existing index
 
         self.__writer = self.__ix.writer()
-        self.__counter = 0  # counts how many documents have been indexed in the current session
+        self.__counter = 0  # Counts how many documents have been indexed in the current session
         self.__fileName = fileName
+        self.__wnl = nltk.WordNetLemmatizer()
+        self.__productTitle = ''
+        self.__reviewTitle = ''
+        self.__reviewContent = ''
+        self.__processedProductTitle = ''
+        self.__processedReviewTitle = ''
+        self.__processedReviewContent = ''
 
-    @staticmethod  # TODO: DA TESTARE
+    @staticmethod
     def __sentimentAnalyzer(text):
-
         if not isinstance(text, str):
             raise TypeError
 
@@ -51,7 +60,7 @@ class Indexer:
             html = f.read().decode('utf-8').split('\n')
             csvreader = csv.reader(html, delimiter='\t')
 
-        labels = [row[1] for row in csvreader if len(row) > 1]  ##TODO: da togliere dalla versione non OOP
+        labels = [row[1] for row in csvreader if len(row) > 1]
         model = AutoModelForSequenceClassification.from_pretrained(MODEL)
         encoded_input = tokenizer(text, return_tensors='pt')
         output = model(**encoded_input)
@@ -64,46 +73,40 @@ class Indexer:
         return {labels[ranking[0]]: scores[ranking[0]], labels[ranking[1]]: scores[ranking[1]], labels[ranking[2]]: scores[ranking[2]]}
 
     def indexGenerator(self):
+        """Opens the supplied dataset, process the content and inserts it into the index"""
         with open(self.__fileName, encoding='utf8') as csvFile:
-
             self.__counter = 0
-            wnl = nltk.WordNetLemmatizer()
-
-            csvReader = csv.reader(csvFile, delimiter=',')
-            next(csvReader)  # skips the first row, which only contains information about the columns
+            self.__csvReader = csv.reader(csvFile, delimiter=',')
+            next(self.__csvReader)  # Skips the first row, which only contains information about the columns
 
             for i in range(self.__ix.doc_count()):
-                next(csvReader)  # skips rows so that the indexing starts from where it left off
+                next(self.__csvReader)  # Skips rows so that the indexing starts from where it left off
 
-            for row in csvReader:
-                productTitle = row[1]  # Original Product Title
-                reviewTitle = row[17]  # Original Review Title
-                reviewContent = row[16]  # Original Review Content
+            for row in self.__csvReader:
+                self.__productTitle = row[1]  # Original Product Title
+                self.__reviewTitle = row[17]  # Original Review Title
+                self.__reviewContent = row[16]  # Original Review Content
 
-                processedProductTitle = stringProcesser(productTitle, wnl)
-                processedReviewTitle = stringProcesser(reviewTitle, wnl)
-                processedReviewContent = stringProcesser(reviewContent, wnl)
+                self.__processedProductTitle = stringProcesser(self.__productTitle, self.__wnl)
+                self.__processedReviewTitle = stringProcesser(self.__reviewTitle, self.__wnl)
+                self.__processedReviewContent = stringProcesser(self.__reviewContent, self.__wnl)
 
                 try:
-                    sentiment = Indexer.__sentimentAnalyzer(reviewContent)
-                    print(sentiment) # debug
-                    print(f"{self.__ix.doc_count()+self.__counter} / 41420")  # debug
-                    positiveScore = sentiment['positive']
-                    neutralScore = sentiment['neutral']
-                    negativeScore = sentiment['negative']
+                    self.__sentiment = Indexer.__sentimentAnalyzer(self.__reviewContent)
+                    print(f'{self.__ix.doc_count()+self.__counter}')  # Prints the current amount of indexed documents
+                    self.__positiveScore = self.__sentiment['positive']
+                    self.__neutralScore = self.__sentiment['neutral']
+                    self.__negativeScore = self.__sentiment['negative']
 
-                    print('preprocessed:', processedReviewContent)  # debug
-                    print('reviewContent:', reviewContent)  # debug
-
-                    self.__writer.add_document(originalProductTitle=productTitle,
-                                               postProductTitle=processedProductTitle,
-                                               originalReviewTitle=reviewTitle,
-                                               postReviewTitle=processedReviewTitle,
-                                               originalReviewContent=reviewContent,
-                                               postReviewContent=processedReviewContent,
-                                               positive=positiveScore,
-                                               neutral=neutralScore,
-                                               negative=negativeScore)
+                    self.__writer.add_document(originalProductTitle=self.__productTitle,
+                                               postProductTitle=self.__processedProductTitle,
+                                               originalReviewTitle=self.__reviewTitle,
+                                               postReviewTitle=self.__processedReviewTitle,
+                                               originalReviewContent=self.__reviewContent,
+                                               postReviewContent=self.__processedReviewContent,
+                                               positive=self.__positiveScore,
+                                               neutral=self.__neutralScore,
+                                               negative=self.__negativeScore)
                 except RuntimeError:
                     print('Runtime error: reviewContent is too long for the sentiment analysis model')
                 except KeyboardInterrupt:
@@ -114,5 +117,3 @@ class Indexer:
                 self.__counter += 1
 
         self.__writer.commit()
-
-
