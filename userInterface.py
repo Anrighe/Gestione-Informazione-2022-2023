@@ -75,6 +75,7 @@ class UserInterface:
         self.__docs.add_command(label='Project', command=self.__openProject)
         self.__docs.add_separator()
         self.__docs.add_command(label='README', command=self.__openReadme)
+        self.__docs.add_command(label='Logic Diagram', command=self.__openLogicDiagram)
         self.__docs.add_command(label='Benchmark', command=self.__openBenchmark)
 
         self.__fullFrame = Frame(self.__window)  # fullFrame contains: searchFrame, resultFrame
@@ -199,6 +200,10 @@ class UserInterface:
     def __openReadme(self):
         """Opens the README.txt file"""
         os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}README.txt')  # Duck Typing
+
+    def __openLogicDiagram(self):
+        """Opens the SchemaLogicoProgetto.png which contains the logic diagram representing the behaviour of this program"""
+        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}SchemaLogicoProgetto.png')
 
     def __openBenchmark(self):
         """Opens the BENCHMARK.txt file"""
