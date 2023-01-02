@@ -4,7 +4,6 @@ import tkinter
 import pandas as pd
 from tkinter import *
 from tkinter.ttk import *
-from indexer import Indexer
 import matplotlib.pyplot as plt
 from inputCleaner import InputCleaner
 from searcher import SentimentSearcherRanker
@@ -37,22 +36,21 @@ class UserInterface:
         (e.g.: When a interaction of a GUI object happens, the mediator notifies every other object that
         needs to know that event happened)
         """
+
+        self.__supportedOS = ['nt', 'posix']
         try:
-            assert os.name == 'nt1' or os.name == 'posix1'  #TODO: DA RIGUARDARE
+            assert os.name in self.__supportedOS
             if os.name == 'nt':
                 self.__fileSystemSeparator = WindowsFileSystemSeparator()
             elif os.name == 'posix':
                 self.__fileSystemSeparator = PosixFileSystemSeparator()
-
         except AssertionError:
             self.__fileSystemSeparator = NotSupportedOS()
 
         self.__indexDir = 'sentimentIndex'  # setting the standard Index folder name
-        self.__datasetName = 'AmazonReviews.csv'  # setting the standard Dataset file name  #TODO: ELIMINABILE?
         self.__searched = False  # False if a search has never been done
-        self.__sentiment = False  # False if the user isn't looking for
+        self.__sentiment = False  # False if the user isn't looking to filter by sentiment
         self.__sentimentType = ''  # Contains the sentiment type the user is looking for (e.g.: 'positive')
-        self.index = Indexer(self.__datasetName, self.__indexDir)  #TODO: CANCELLABILE?
         self.userInput = ''
 
         self.__window = Tk()  # Creating Tkinter window
@@ -114,10 +112,10 @@ class UserInterface:
         self.__slider = RangeSliderH(self.__sentimentSearchFrame,
                                      [self.__leftHandle, self.__rightHandle],
                                      Width=200, Height=65, padX=11,
-                                     min_val=0, max_val=1, show_value=True)  # TODO: es: bgColor='#660000' per cambiare colore
+                                     min_val=0, max_val=1, show_value=True, bgColor='white')
 
         # Title over the Search Bar
-        self.__title = tkinter.Label(self.__searchFrame, text='Amazon Review Search Engine', fg='#2CDFD4', font=('System', 48, 'bold'))
+        self.__title = tkinter.Label(self.__searchFrame, text='Amazon Review Search Engine', fg='#6899c7', font=('System', 48, 'bold'))
 
         self.__positiveRadioButton.pack(side=LEFT, padx=20)
         self.__neutralRadioButton.pack(side=LEFT, padx=20)
@@ -177,7 +175,6 @@ class UserInterface:
         self.__statsFrame.pack(side=LEFT)
         self.__fullFrame.pack(fill=BOTH, expand=True)
 
-
         self.__window.mainloop()
 
     def fun(self):
@@ -191,52 +188,81 @@ class UserInterface:
     def searchResult(self):
         return self.__searchResult
 
-    @staticmethod #TODO: DA PROVARE
+    @staticmethod
     def __terminate():
         exit(0)
 
     def __openProject(self):
+        """Opens the progGestI-22-23.pdf file containing the project assignment"""
         os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}progGestI-22-23.pdf')  # Duck Typing
 
     def __openReadme(self):
+        """Opens the README.txt file"""
         os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}README.txt')  # Duck Typing
 
     def __openBenchmark(self):
+        """Opens the BENCHMARK.txt file"""
         os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}BENCHMARK.txt')  # Duck Typing
 
     def __setPositiveSentimentType(self):
+        """Triggered when the 'Positive' Radio Button is pressed"""
         self.__sentiment = True
         self.__sentimentType = 'positive'
 
     def __setNeutralSentimentType(self):
+        """Triggered when the 'Neutral' Radio Button is pressed"""
         self.__sentiment = True
         self.__sentimentType = 'neutral'
 
     def __setNegativeSentimentType(self):
+        """Triggered when the 'Negative' Radio Button is pressed"""
         self.__sentiment = True
         self.__sentimentType = 'negative'
 
     def __setNoSentimentType(self):
+        """Triggered when the 'No Sentiment' Radio Button is pressed"""
         self.__sentiment = False
         self.__sentimentType = ''
 
     def __getEntryIndexData(self):
+        """
+        Sets indexDir to the input of the entry entryIndex, unless it's an empty string, which
+        resets it to the original index name 'sentimentIndex'.
+
+        If the directory does not exist shows a popup error, otherwise it destroys the topIndex window.
+        """
         self.__indexDir = self.__entryIndex.get()
         if self.__indexDir == '':
             self.__indexDir = 'sentimentIndex'
-        self.__topIndex.destroy()
+
+        try:
+            assert os.path.exists(self.__indexDir)
+            self.__topIndex.destroy()
+        except AssertionError:
+            self.__popUpMissingIndex()
 
     def __setGraph(self, positive, neutral, negative, legendState):
+        """
+        Plots the Histogram with the sentiment of the selected document's values
+        :param positive: Value of positivity of the selected document
+        :param neutral: Value of neutrality of the selected document
+        :param negative: Value of negativity of the selected document
+        :param legendState: True if the legend will be displayed in the histogram
+        """
         self.__dataFrame = pd.DataFrame({'Positive': [positive], 'Neutral': [neutral], 'Negative': [negative]})
         self.__ax.clear()
         self.__dataFrame.plot(kind='bar', legend=legendState, ax=self.__ax, color=['green', 'orange', 'red'])
         self.__bar.draw()
 
     def __onListSelect(self, event):
+        """
+        If at least one search has been successfully executed and the searchResult list isn't empty:
+        it inserts the information of the document in the resultDisplayer, and it plots the required graph
+        :param event: Selection of an element in the list
+        """
         if self.__searched:
             if self.__searchResult:
                 indexList = int(event.widget.curselection()[0])
-                #value = event.widget.get(indexList) #debug
 
                 self.__resultDisplayer.config(state=NORMAL)
                 self.__resultDisplayer.delete('1.0', END)
@@ -251,9 +277,8 @@ class UserInterface:
                                 self.__searchResult[indexList][0]['neutral'],
                                 self.__searchResult[indexList][0]['negative'], False)
 
-                #print(f'You selected item {indexList}: '{value}'')  # debug
-
     def __popUpIndexWindow(self):
+        """Creates the popup for the 'SelectIndex' menu option"""
         self.__topIndex = Toplevel(self.__window)  # Creates a Toplevel window
         self.__topIndex.title('Select Index')
         self.__topIndex.geometry(self.__geometryCentered(350, 125, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
@@ -278,6 +303,7 @@ class UserInterface:
         self.__buttonFrameIndex.pack(side=BOTTOM)
 
     def __popUpMissingQuery(self):
+        """Creates the error popup in case the query inserted by the user is an empty string"""
         self.__topMissingQuery = Toplevel(self.__window)  # Creates a Toplevel window
         self.__topMissingQuery.title('Missing query!')
         self.__topMissingQuery.geometry(self.__geometryCentered(250, 100, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
@@ -289,32 +315,46 @@ class UserInterface:
         self.__okMissingQuery.pack(side=BOTTOM, pady=15)
         self.__labelMissingQuery.pack(side=BOTTOM, pady=0)
 
+    def __popUpMissingIndex(self):
+        """Creates the error popup in case the directory containing the index specified by the user is missing"""
+        self.__topMissingIndex = Toplevel(self.__window)  # Creates a Toplevel window
+        self.__topMissingIndex.title('Missing Index!')
+        self.__topMissingIndex.geometry(self.__geometryCentered(250, 100, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
+        self.__topMissingIndex.resizable(False, False)
 
-    def startIndexing(self):  # funzione di debug per far partire l'indicizzazione
-        self.index.indexGenerator()
+        self.__labelMissingQuery = Label(self.__topMissingIndex, text='Please insert an existing directory')
+        self.__okMissingQuery = Button(self.__topMissingIndex, text='    Ok    ', command=lambda: self.__topMissingIndex.destroy())
+
+        self.__okMissingQuery.pack(side=BOTTOM, pady=15)
+        self.__labelMissingQuery.pack(side=BOTTOM, pady=0)
 
     def userQuery(self):
+        """
+        Gets the user input in the searchField and if it isn't an empty string converts it into a valid query,
+        searches the Index, orders the results with the ranking function and populates the resultList.
+        If the query is missing shows a popup error
+        """
         self.userInput = self.__searchField.get()
-        print(f'QUERY:{self.userInput}')
-        print(f'SENTIMENT:({self.__sentiment}, {self.__sentimentType})')
 
         if self.userInput != '':
             self.cleaner = InputCleaner(self.userInput, sentiment=self.__sentiment, slider=self.__slider.getValues(), sentimentType=self.__sentimentType)
             self.queryList = self.cleaner.query
-            self.searcher = SentimentSearcherRanker('sentimentIndex', self.cleaner.tokenInput, self.queryList, sentiment=self.__sentiment, sentimentType=self.__sentimentType)
+            self.searcher = SentimentSearcherRanker(self.__indexDir, self.cleaner.tokenInput,
+                                                    self.queryList, sentiment=self.__sentiment,
+                                                    sentimentType=self.__sentimentType)
 
-            self.__searchAndRank()
+            self.__searchAndRank()  # Decorated by timeDecorator
             self.__searched = True
+            self.__resultList.delete(0, END)  # Clears the result list
 
-            self.__resultList.delete(0, END)
-
-            for result in self.__searchResult:  # adding results to the GUI list
+            for result in self.__searchResult:  # Adding results to the GUI list
                 self.__resultList.insert(END, result[0]['originalReviewTitle'])
-                print(result)
         else:
             self.__popUpMissingQuery()
 
-    def __geometryCentered(self, windowWidth, windowHeight, screenWidth, screenHeight):
+    @staticmethod
+    def __geometryCentered(windowWidth, windowHeight, screenWidth, screenHeight):
+        """Sets the window position at the centre of the screen"""
         return '{}x{}+{}+{}'.format(windowWidth,
                                     windowHeight,
                                     int((screenWidth / 2) - (windowWidth / 2)),
@@ -322,18 +362,33 @@ class UserInterface:
 
     @timeDecorator
     def __searchAndRank(self):
+        """
+        Calls the searcher that executes the search on the index and the ranking function
+        which orders the result based on their score
+        """
         self.searcher.search()
         self.__searchResult = self.searcher.ranking()
 
 
 class WindowsFileSystemSeparator:
-    def getSeparator(self): return '\\\\'
+    """Class used for Duck Typing in the OS check"""
+    @staticmethod
+    def getSeparator():
+        """:return: The file system separator for Windows-based system"""
+        return '\\\\'
 
 
 class PosixFileSystemSeparator:
-    def getSeparator(self): return '/'
+    """Class used for Duck Typing in the OS check"""
+    @staticmethod
+    def getSeparator():
+        """:return: The file system separator for Posix-based system"""
+        return '/'
 
 
 class NotSupportedOS:
-    def getSeparator(self):
+    """Class used for Duck Typing in the OS check"""
+    @staticmethod
+    def getSeparator():
+        """:return: OSError Exception meaning the current OS is not supported"""
         raise OSError

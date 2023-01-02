@@ -1,7 +1,7 @@
 from whoosh import index
+from abc import ABC, abstractmethod
 from whoosh.qparser import QueryParser
 from sentimentRanking import SentimentRanking
-from abc import ABC, abstractmethod
 
 
 class BaseSearcher(ABC):

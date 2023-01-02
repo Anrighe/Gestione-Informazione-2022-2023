@@ -3,10 +3,19 @@ from nltk.tokenize import word_tokenize
 
 
 class SentimentRanking:
-
+    """Class that implements the sentiment ranking function"""
     def __init__(self, queryResult, tokenInput, sentiment, sentimentType, reviewContentBoost=1, reviewTitleBoost=1.5, productTitleBoost=2.5):
+        """
+        :param queryResult: Contains the result of the queries
+        :param tokenInput: Tokenized user query
+        :param sentiment: True if the user wants to filter by sentiment
+        :param sentimentType: Contains the sentiment type the user is looking for (e.g.: 'positive')
+        :param reviewContentBoost: Boost applied to the reviewContent matches
+        :param reviewTitleBoost: Boost applied to the reviewTitle matches
+        :param productTitleBoost: Boost applied to the productTitle matches
+        """
         self.__queryResult = queryResult
-        self.__tokenInput = tokenInput  # contains tokenized postprocessed input words
+        self.__tokenInput = tokenInput
 
         self.__tokenProductTitle = []
         self.__tokenReviewTitle = []
@@ -61,15 +70,17 @@ class SentimentRanking:
         return sqrt(result)
 
     def calculateRank(self):
-
-        for result in self.__queryResult:  # FISSO RISULTATO (es: negativity 0.9)
+        """Implements the Sentiment Ranking function and calculates the rank of each document
+        :return: The list of ordered documents
+        """
+        for result in self.__queryResult:  # Fixes a result (e.g.: negativity 0.9)
             self.__freq = 0
 
             self.__tokenProductTitle = word_tokenize(result["postProductTitle"])
             self.__tokenReviewTitle = word_tokenize(result["postReviewTitle"])
             self.__tokenReviewContent = word_tokenize(result["postReviewContent"])
 
-            for word in self.__tokenInput:  ##FISSO word (es: "fire")
+            for word in self.__tokenInput:  # Fixes a word (e.g.: "fire")
 
                 self.__freqProductTitle += self.__tokenProductTitle.count(word) * self.__tokenInput.count(word)
                 self.__freqReviewTitle += self.__tokenReviewTitle.count(word) * self.__tokenInput.count(word)
