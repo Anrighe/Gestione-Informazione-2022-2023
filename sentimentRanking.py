@@ -10,9 +10,9 @@ class SentimentRanking:
         :param tokenInput: Tokenized user query
         :param sentiment: True if the user wants to filter by sentiment
         :param sentimentType: Contains the sentiment type the user is looking for (e.g.: 'positive')
-        :param reviewContentBoost: Boost applied to the reviewContent matches
-        :param reviewTitleBoost: Boost applied to the reviewTitle matches
-        :param productTitleBoost: Boost applied to the productTitle matches
+        :param REVIEW_CONTENT_BOOST: Boost applied to the reviewContent matches
+        :param REVIEW_TITLE_BOOST: Boost applied to the reviewTitle matches
+        :param PRODUCT_TITLE_BOOST: Boost applied to the productTitle matches
         """
         self.__queryResult = queryResult
         self.__tokenInput = tokenInput
@@ -21,9 +21,9 @@ class SentimentRanking:
         self.__tokenReviewTitle = []
         self.__tokenReviewContent = []
 
-        self.__reviewContentBoost = reviewContentBoost
-        self.__reviewTitleBoost = reviewTitleBoost
-        self.__productTitleBoost = productTitleBoost
+        self.__REVIEW_CONTENT_BOOST = reviewContentBoost
+        self.__REVIEW_TITLE_BOOST = reviewTitleBoost
+        self.__PRODUCT_TITLE_BOOST = productTitleBoost
 
         self.__freqProductTitle = 0
         self.__freqReviewTitle = 0
@@ -60,6 +60,13 @@ class SentimentRanking:
         self.__freqNormReviewContent = value
         self.__freqNormTokenInput = value
 
+    @property
+    def boost(self):
+        """Returns a dictionary containing the boost used for the ranking"""
+        return({"REVIEW_CONTENT_BOOST": self.__REVIEW_CONTENT_BOOST,
+                "REVIEW_TITLE_BOOST": self.__REVIEW_TITLE_BOOST,
+                "PRODUCT_TITLE_BOOST": self.__PRODUCT_TITLE_BOOST})
+
     def __freqNorm(self, tokenList):
         result = 0
         tokenSet = list(dict.fromkeys(tokenList))
@@ -91,17 +98,17 @@ class SentimentRanking:
             self.__freqNormReviewContent = self.__freqNorm(self.__tokenReviewContent)
             self.__freqNormTokenInput = self.__freqNorm(self.__tokenInput)
 
-            sim1 = self.__reviewContentBoost * (self.__freqReviewContent / (self.__freqNormReviewContent * self.__freqNormTokenInput))
-            sim2 = self.__reviewTitleBoost * (self.__freqReviewTitle / (self.__freqNormReviewTitle * self.__freqNormTokenInput))
-            sim3 = self.__productTitleBoost * (self.__freqProductTitle / (self.__freqNormProductTitle * self.__freqNormTokenInput))
+            sim1 = self.__REVIEW_CONTENT_BOOST * (self.__freqReviewContent / (self.__freqNormReviewContent * self.__freqNormTokenInput))
+            sim2 = self.__REVIEW_TITLE_BOOST * (self.__freqReviewTitle / (self.__freqNormReviewTitle * self.__freqNormTokenInput))
+            sim3 = self.__PRODUCT_TITLE_BOOST * (self.__freqProductTitle / (self.__freqNormProductTitle * self.__freqNormTokenInput))
 
             if self.__sentiment:
                 self.__sentimentValue = float(result[self.__sentimentType])
                 similarity = (sim1 + sim2 + sim3 + self.__sentimentValue) / (
-                            self.__reviewContentBoost + self.__reviewTitleBoost + self.__productTitleBoost + 1)
+                            self.__REVIEW_CONTENT_BOOST + self.__REVIEW_TITLE_BOOST + self.__PRODUCT_TITLE_BOOST + 1)
             else:
                 similarity = (sim1 + sim2 + sim3) / (
-                            self.__reviewContentBoost + self.__reviewTitleBoost + self.__productTitleBoost)
+                            self.__REVIEW_CONTENT_BOOST + self.__REVIEW_TITLE_BOOST + self.__PRODUCT_TITLE_BOOST)
 
             self.__listResult.append((result, similarity))
 
