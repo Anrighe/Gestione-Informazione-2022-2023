@@ -11,10 +11,10 @@ def stringProcesser(string, wnl, removeDuplicates=False):
         When False  -> Indexing
         When True   -> User Query
 
-    Example of use:
+    Doctest example:
     >>> import nltk
     >>> stringProcesser("Apple Apple Watched 10!?..", nltk.WordNetLemmatizer(), True)
-    "apple watch 10"
+    'appl watch 10'
     """
     if isinstance(string, str):
         # removes all the punctuation from the string expect for the char "-"
