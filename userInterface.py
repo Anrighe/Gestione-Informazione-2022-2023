@@ -178,9 +178,6 @@ class UserInterface:
 
         self.__window.mainloop()
 
-    def fun(self):
-        pass
-
     @property
     def resultInfo(self):
         return self.__resultInfo
