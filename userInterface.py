@@ -54,10 +54,8 @@ class UserInterface:
         self.userInput = ''
 
         self.__window = Tk()  # Creating Tkinter window
-        self.__window.title(
-            '''Progetto Gestione dell'Informazione 2022-2023  -  Search Engine per Recensioni di Prodotti Amazon  -  Enrico Marras (152336), Lorenzo Colli (153063), Mattia Lazzarini (152833)''')
-        self.__window.geometry(
-            self.__geometryCentered(1366, 800, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
+        self.__window.title('''Complementi di programmazione 2022-2023  -  Search Engine per Recensioni di Prodotti Amazon  -  Enrico Marras (152336), Lorenzo Colli (153063), Mattia Lazzarini (152833)''')
+        self.__window.geometry(self.__geometryCentered(1366, 800, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
 
         self.__menuBar = Menu(self.__window)  # Creating the Menu Bar
         self.__window.config(menu=self.__menuBar)  # Displays the Menu in the window
@@ -78,18 +76,22 @@ class UserInterface:
         self.__docs.add_command(label='Logic Diagram', command=self.__openLogicDiagram)
         self.__docs.add_command(label='Benchmark', command=self.__openBenchmark)
 
-        self.__fullFrame = Frame(self.__window)  # fullFrame contains: searchFrame, resultFrame
-        self.__searchFrame = Frame(self.__fullFrame)  # searchFrame contains: simpleSearchFrame, sentimentSearchFrame
+        self.__fullFrame = tkinter.Frame(self.__window)  # fullFrame contains: searchFrame, resultFrame
+        self.__fullFrame.config(background='white')
+        self.__searchFrame = tkinter.Frame(self.__fullFrame)  # searchFrame contains: simpleSearchFrame, sentimentSearchFrame
+        self.__searchFrame.config(background='white')
 
         # Search Bar and 'Search' Button
-        self.__simpleSearchFrame = Frame(self.__searchFrame)  # simpleSearchFrame contains: searchField, searchButton
+        self.__simpleSearchFrame = tkinter.Frame(self.__searchFrame)  # simpleSearchFrame contains: searchField, searchButton
+        self.__simpleSearchFrame.config(background='white')
         self.__searchField = Entry(self.__simpleSearchFrame, width=35, font=('Microsoft Yi Baiti', 36))
         self.__searchButton = tkinter.Button(self.__simpleSearchFrame, text='Search', height=1, width=6, command=self.userQuery, font=('System', 18, 'bold'), fg='dark blue')
         self.__searchField.pack(side=LEFT)
         self.__searchButton.pack(side=RIGHT)
 
         # sentimentSearchFrame contains: sentiment multi-selection radio buttons, slider
-        self.__sentimentSearchFrame = Frame(self.__searchFrame)
+        self.__sentimentSearchFrame = tkinter.Frame(self.__searchFrame)
+        self.__sentimentSearchFrame.config(background='white')
 
         # Sentiment Radio Buttons
         self.__positiveRadioButton = Radiobutton(self.__sentimentSearchFrame, text='Positive', value='1', command=self.__setPositiveSentimentType)
@@ -98,13 +100,13 @@ class UserInterface:
         self.__noSentimentRadioButton = Radiobutton(self.__sentimentSearchFrame, text='No Sentiment', value='4', command=self.__setNoSentimentType)
 
         self.__style = Style()
-        self.__style.configure('changeFgPositive.TRadiobutton', foreground='green', font=('System', 18, 'bold'))
+        self.__style.configure('changeFgPositive.TRadiobutton', background='white', foreground='green', font=('System', 18, 'bold'))
         self.__positiveRadioButton['style'] = 'changeFgPositive.TRadiobutton'
-        self.__style.configure('changeFgNeutral.TRadiobutton', foreground='orange', font=('System', 18, 'bold'))
+        self.__style.configure('changeFgNeutral.TRadiobutton', background='white', foreground='orange', font=('System', 18, 'bold'))
         self.__neutralRadioButton['style'] = 'changeFgNeutral.TRadiobutton'
-        self.__style.configure('changeFgNegative.TRadiobutton', foreground='red', font=('System', 18, 'bold'))
+        self.__style.configure('changeFgNegative.TRadiobutton', background='white', foreground='red', font=('System', 18, 'bold'))
         self.__negativeRadioButton['style'] = 'changeFgNegative.TRadiobutton'
-        self.__style.configure('changeFgNoSent.TRadiobutton', font=('System', 18, 'bold'))
+        self.__style.configure('changeFgNoSent.TRadiobutton', background='white', foreground='black', font=('System', 18, 'bold'))
         self.__noSentimentRadioButton['style'] = 'changeFgNoSent.TRadiobutton'
 
         # Horizontal range slider
@@ -116,7 +118,7 @@ class UserInterface:
                                      min_val=0, max_val=1, show_value=True, bgColor='white')
 
         # Title over the Search Bar
-        self.__title = tkinter.Label(self.__searchFrame, text='Amazon Review Search Engine', fg='#6899c7', font=('System', 48, 'bold'))
+        self.__title = tkinter.Label(self.__searchFrame, text='Amazon Review Search Engine', bg='white', fg='#6899c7', font=('System', 48, 'bold'))
 
         self.__positiveRadioButton.pack(side=LEFT, padx=20)
         self.__neutralRadioButton.pack(side=LEFT, padx=20)
@@ -129,8 +131,10 @@ class UserInterface:
         self.__sentimentSearchFrame.pack(side=TOP)
         self.__searchFrame.pack()
 
-        self.__resultFrame = Frame(self.__fullFrame)  # resultFrame contains: resultFrameList, resultFrameDisplayer, statsFrame
-        self.__resultFrameList = Frame(self.__resultFrame)  # resultFrameList contains: resultList and scrollbarList
+        self.__resultFrame = tkinter.Frame(self.__fullFrame)  # resultFrame contains: resultFrameList, resultFrameDisplayer, statsFrame
+        self.__resultFrame.config(background='white')
+        self.__resultFrameList = tkinter.Frame(self.__resultFrame)  # resultFrameList contains: resultList and scrollbarList
+        self.__resultFrameList.config(background='white')
 
         # The <<ListboxSelect>> event was designed to fire whenever the selection changes, no matter how it changes.
         # That could mean when the user selects something new in the listbox, or when the selection is removed from the listbox.
@@ -142,7 +146,8 @@ class UserInterface:
         self.__scrollbarList.config(command=self.__resultList.yview)
 
         # Adding the text displayer for the selected document
-        self.__resultFrameDisplayer = Frame(self.__resultFrame)  # resultFrameDisplayer contains: resultDisplayer, scrollbarDisplayer
+        self.__resultFrameDisplayer = tkinter.Frame(self.__resultFrame)  # resultFrameDisplayer contains: resultDisplayer, scrollbarDisplayer
+        self.__resultFrameDisplayer.config(background='white')
         self.__resultDisplayer = Text(self.__resultFrameDisplayer, height=30, width=65, wrap=WORD)
         self.__resultDisplayer.tag_config('reviewTitle', foreground='blue', font=('System', 30, 'bold', 'underline'))
         self.__resultDisplayer.tag_config('productTitle', foreground='dark blue', font=('System', 25, 'bold'))
@@ -161,7 +166,8 @@ class UserInterface:
         self.__resultFrame.pack()
 
         # Adding the sentiment histogram for the selected document
-        self.__statsFrame = Frame(self.__resultFrame)  # statsFrame contains: figure, resultInfo
+        self.__statsFrame = tkinter.Frame(self.__resultFrame)  # statsFrame contains: figure, resultInfo
+        self.__statsFrame.config(background='white')
         self.__figure = plt.Figure(figsize=(2.5, 2.5), dpi=100)
         self.__ax = self.__figure.add_subplot(111)
         self.__bar = FigureCanvasTkAgg(self.__figure, self.__statsFrame)
@@ -171,10 +177,11 @@ class UserInterface:
 
         # Adding the search stats (# results, (time))
         self.__resultInfo = Label(self.__statsFrame, text='\n', font=('System', 18))
+        self.__resultInfo.config(background='white')
         self.__resultInfo.pack(side=BOTTOM, pady=83)
 
-        self.__statsFrame.pack(side=LEFT)
-        self.__fullFrame.pack(fill=BOTH, expand=True)
+        self.__statsFrame.pack(side=LEFT, padx=20)
+        self.__fullFrame.pack(fill='both', expand=True)
 
         self.__window.mainloop()
 
@@ -281,23 +288,26 @@ class UserInterface:
 
     def __popUpIndexWindow(self):
         """Creates the popup for the 'SelectIndex' menu option"""
-        self.__topIndex = Toplevel(self.__window)  # Creates a Toplevel window
+        self.__topIndex = tkinter.Toplevel(self.__window)  # Creates a Toplevel window
+        self.__topIndex.focus()
+        self.__topIndex.config(background='white')
         self.__topIndex.title('Select Index')
-        self.__topIndex.geometry(self.__geometryCentered(350, 125, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
+        self.__topIndex.geometry(self.__geometryCentered(350, 100, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
         self.__topIndex.resizable(False, False)
 
-        self.__entryFrameIndex = Frame(self.__topIndex)
-        self.__labelIndexTop = Label(self.__entryFrameIndex, text='Please insert the name of the directory containing the Index')
-        self.__labelIndexBot = Label(self.__entryFrameIndex, text='\n*The directory needs to be in the same folder of the source files')
+        self.__entryFrameIndex = tkinter.Frame(self.__topIndex)
+        self.__entryFrameIndex.config(background='white')
+        self.__labelIndexTop = Label(self.__entryFrameIndex, background='white', foreground='black', text='Please insert the name of the directory containing the Index')
         self.__entryIndex = Entry(self.__entryFrameIndex, width=25, font='16')  # Creates an Entry Widget in the Toplevel window
 
-        self.__labelIndexBot.pack(side=BOTTOM)
+
         self.__entryIndex.pack(side=BOTTOM)
         self.__labelIndexTop.pack(side=BOTTOM)
         self.__entryIndex.pack(pady=5)
         self.__entryFrameIndex.pack(side=TOP)
 
-        self.__buttonFrameIndex = Frame(self.__topIndex)  # Creates a Frame for the buttons
+        self.__buttonFrameIndex = tkinter.Frame(self.__topIndex)  # Creates a Frame for the buttons
+        self.__buttonFrameIndex.config(background='white')
         self.__okIndex = Button(self.__buttonFrameIndex, text='    Ok    ', command=self.__getEntryIndexData)
         self.__okIndex.pack(side=LEFT, padx=10, pady=5)
         self.__cancelIndex = Button(self.__buttonFrameIndex, text='Cancel', command=lambda: self.__topIndex.destroy())
