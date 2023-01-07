@@ -53,11 +53,11 @@ class UserInterface:
         self.__sentimentType = ''  # Contains the sentiment type the user is looking for (e.g.: 'positive')
         self.userInput = ''
 
-        self.__window = Tk()  # Creating Tkinter window
-        self.__window.title('''Complementi di programmazione 2022-2023  -  Search Engine per Recensioni di Prodotti Amazon  -  Enrico Marras (152336), Lorenzo Colli (153063), Mattia Lazzarini (152833)''')
+        self.__window = Tk()  # Creates Tkinter window
+        self.__window.title('''Complementi di Programmazione 2022-2023  -  Search Engine per Recensioni di Prodotti Amazon  -  Enrico Marras (152336), Lorenzo Colli (153063), Mattia Lazzarini (152833)''')
         self.__window.geometry(self.__geometryCentered(1366, 800, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
 
-        self.__menuBar = Menu(self.__window)  # Creating the Menu Bar
+        self.__menuBar = Menu(self.__window)  # Creates the Menu Bar
         self.__window.config(menu=self.__menuBar)  # Displays the Menu in the window
 
         # Adding File Menu
@@ -98,7 +98,9 @@ class UserInterface:
         self.__neutralRadioButton = Radiobutton(self.__sentimentSearchFrame, text='Neutral', value='2', command=self.__setNeutralSentimentType)
         self.__negativeRadioButton = Radiobutton(self.__sentimentSearchFrame, text='Negative', value='3', command=self.__setNegativeSentimentType)
         self.__noSentimentRadioButton = Radiobutton(self.__sentimentSearchFrame, text='No Sentiment', value='4', command=self.__setNoSentimentType)
+        self.__noSentimentRadioButton.invoke()
 
+        # Radio button styles
         self.__style = Style()
         self.__style.configure('changeFgPositive.TRadiobutton', background='white', foreground='green', font=('System', 18, 'bold'))
         self.__positiveRadioButton['style'] = 'changeFgPositive.TRadiobutton'
@@ -300,7 +302,6 @@ class UserInterface:
         self.__labelIndexTop = Label(self.__entryFrameIndex, background='white', foreground='black', text='Please insert the name of the directory containing the Index')
         self.__entryIndex = Entry(self.__entryFrameIndex, width=25, font='16')  # Creates an Entry Widget in the Toplevel window
 
-
         self.__entryIndex.pack(side=BOTTOM)
         self.__labelIndexTop.pack(side=BOTTOM)
         self.__entryIndex.pack(pady=5)
@@ -344,16 +345,17 @@ class UserInterface:
         """
         Gets the user input in the searchField and if it isn't an empty string converts it into a valid query,
         searches the Index, orders the results with the ranking function and populates the resultList.
-        If the query is missing shows a popup error
+        If the query is missing shows a popup error.
         """
         self.userInput = self.__searchField.get()
 
         if self.userInput != '':
-            self.cleaner = InputCleaner(self.userInput, sentiment=self.__sentiment, slider=self.__slider.getValues(), sentimentType=self.__sentimentType)
-            self.queryList = self.cleaner.query
-            self.searcher = SentimentSearcherRanker(self.__indexDir, self.cleaner.tokenInput,
-                                                    self.queryList, sentiment=self.__sentiment,
-                                                    sentimentType=self.__sentimentType)
+            self.__cleaner = InputCleaner(self.userInput, sentiment=self.__sentiment,
+                                          slider=self.__slider.getValues(), sentimentType=self.__sentimentType)
+            self.__queryList = self.__cleaner.query
+            self.__searcher = SentimentSearcherRanker(self.__indexDir, self.__cleaner.tokenInput,
+                                                      self.__queryList, sentiment=self.__sentiment,
+                                                      sentimentType=self.__sentimentType)
 
             self.__searchAndRank()  # Decorated by timeDecorator
             self.__searched = True
@@ -378,8 +380,8 @@ class UserInterface:
         Calls the searcher that executes the search on the index and the ranking function
         which orders the result based on their score
         """
-        self.searcher.search()
-        self.__searchResult = self.searcher.ranking()
+        self.__searcher.search()
+        self.__searchResult = self.__searcher.ranking()
 
 
 class WindowsFileSystemSeparator:
