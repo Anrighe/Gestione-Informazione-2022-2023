@@ -68,6 +68,7 @@ class SentimentRanking:
                 "PRODUCT_TITLE_BOOST": self.__PRODUCT_TITLE_BOOST})
 
     def __freqNorm(self, tokenList):
+        """Norm 2 of the frequency of each word contained in the tokenList"""
         result = 0
         tokenSet = list(dict.fromkeys(tokenList))
 

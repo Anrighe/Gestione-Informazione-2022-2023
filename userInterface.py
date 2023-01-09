@@ -13,7 +13,6 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 def timeDecorator(func):
     """Decorates a function and measures its execution time
-
     :param func: function that needs to be measured
     """
     def inner(self):
@@ -74,6 +73,7 @@ class UserInterface:
         self.__docs.add_separator()
         self.__docs.add_command(label='README', command=self.__openReadme)
         self.__docs.add_command(label='Logic Diagram', command=self.__openLogicDiagram)
+        self.__docs.add_command(label='Ranking Function', command=self.__openRankingFunction)
         self.__docs.add_command(label='Benchmark', command=self.__openBenchmark)
 
         self.__fullFrame = tkinter.Frame(self.__window)  # fullFrame contains: searchFrame, resultFrame
@@ -210,6 +210,10 @@ class UserInterface:
     def __openLogicDiagram(self):
         """Opens the SchemaLogicoProgetto.png which contains the logic diagram representing the behaviour of this program"""
         os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}SchemaLogicoProgetto.png')
+
+    def __openRankingFunction(self):
+        """Opens the rankingFunction.png which contains the formula used for the ranking function"""
+        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}rankingFunction.png')
 
     def __openBenchmark(self):
         """Opens the BENCHMARK.txt file"""
