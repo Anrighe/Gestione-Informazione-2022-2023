@@ -50,7 +50,7 @@ class UserInterface:
         self.__searched = False  # False if a search has never been done
         self.__sentiment = False  # False if the user isn't looking to filter by sentiment
         self.__sentimentType = ''  # Contains the sentiment type the user is looking for (e.g.: 'positive')
-        self.userInput = ''
+        self.__userInput = ''
 
         self.__window = Tk()  # Creates Tkinter window
         self.__window.title('''Complementi di Programmazione 2022-2023  -  Search Engine per Recensioni di Prodotti Amazon  -  Enrico Marras (152336), Lorenzo Colli (153063), Mattia Lazzarini (152833)''')
@@ -351,10 +351,10 @@ class UserInterface:
         searches the Index, orders the results with the ranking function and populates the resultList.
         If the query is missing shows a popup error.
         """
-        self.userInput = self.__searchField.get()
+        self.__userInput = self.__searchField.get()
 
-        if self.userInput != '':
-            self.__cleaner = InputCleaner(self.userInput, sentiment=self.__sentiment,
+        if self.__userInput != '':
+            self.__cleaner = InputCleaner(self.__userInput, sentiment=self.__sentiment,
                                           slider=self.__slider.getValues(), sentimentType=self.__sentimentType)
             self.__queryList = self.__cleaner.query
             self.__searcher = SentimentSearcherRanker(self.__indexDir, self.__cleaner.tokenInput,
