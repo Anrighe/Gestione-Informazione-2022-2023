@@ -51,10 +51,17 @@ class UserInterface:
         self.__sentiment = False  # False if the user isn't looking to filter by sentiment
         self.__sentimentType = ''  # Contains the sentiment type the user is looking for (e.g.: 'positive')
         self.__userInput = ''
+        self.__cleaner = None
+        self.__queryList = None
+        self.__searcher = None
+        self.__suggestedQuery = '[Suggested query placeholder]'
 
+        self.__windowWidth = 1366
+        self.__windowHeight = 768
         self.__window = Tk()  # Creates Tkinter window
         self.__window.title('''Complementi di Programmazione 2022-2023  -  Search Engine per Recensioni di Prodotti Amazon  -  Enrico Marras (152336), Lorenzo Colli (153063), Mattia Lazzarini (152833)''')
-        self.__window.geometry(self.__geometryCentered(1366, 800, self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
+        self.__window.geometry(self.__geometryCentered(self.__windowWidth, self.__windowHeight,
+                                                       self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
 
         self.__menuBar = Menu(self.__window)  # Creates the Menu Bar
         self.__window.config(menu=self.__menuBar)  # Displays the Menu in the window
@@ -85,7 +92,9 @@ class UserInterface:
         self.__simpleSearchFrame = tkinter.Frame(self.__searchFrame)  # simpleSearchFrame contains: searchField, searchButton
         self.__simpleSearchFrame.config(background='white')
         self.__searchField = Entry(self.__simpleSearchFrame, width=35, font=('Microsoft Yi Baiti', 36))
-        self.__searchButton = tkinter.Button(self.__simpleSearchFrame, text='Search', height=1, width=6, command=self.userQuery, font=('System', 18, 'bold'), fg='dark blue')
+        self.__searchField.bind('<Return>', self.__userQueryCaller)
+        self.__searchButton = tkinter.Button(self.__simpleSearchFrame, text='Search', height=1, width=6,
+                                             command=self.userQuery, font=('System', 18, 'bold'), fg='dark blue')
         self.__searchField.pack(side=LEFT)
         self.__searchButton.pack(side=RIGHT)
 
@@ -129,8 +138,16 @@ class UserInterface:
         self.__slider.pack(side=LEFT, padx=30)
         self.__title.pack(side=TOP)
 
-        self.__simpleSearchFrame.pack(side=TOP, pady=30)
-        self.__sentimentSearchFrame.pack(side=TOP)
+        self.__simpleSearchFrame.pack(side=TOP)
+
+        self.__sentimentSearchFrame.pack(side=BOTTOM)
+
+        #TODO: DA RIVEDERE
+        self.__suggestedQuery = Label(self.__searchFrame, text=f'Where you looking for: {self.__querySuggestion}?',
+                                      font=('Microsoft Yi Baiti', 18, 'underline', 'bold'),
+                                      background='white', foreground='blue')
+        self.__suggestedQuery.bind('<Button-1>', self.__querySuggestionPressed)  # TODO:CAMBIARE LA LAMBDA PER LA LABEL PREMUTA
+
         self.__searchFrame.pack()
 
         self.__resultFrame = tkinter.Frame(self.__fullFrame)  # resultFrame contains: resultFrameList, resultFrameDisplayer, statsFrame
@@ -345,6 +362,23 @@ class UserInterface:
         self.__okMissingQuery.pack(side=BOTTOM, pady=15)
         self.__labelMissingQuery.pack(side=BOTTOM, pady=0)
 
+    @property
+    def __querySuggestion(self):
+        return self.__suggestedQuery
+
+    @__querySuggestion.setter
+    def __querySuggestion(self, value):
+        self.__suggestedQuery = f'Where you looking for: {value}?'
+
+    def __querySuggestionPressed(self, event):
+        print(event)
+
+    def __userQueryCaller(self, event):
+        """
+        Specifically used to call the userQuery funtion when the 'Enter' key is pressed while the searchField is focused
+        """
+        self.userQuery()
+
     def userQuery(self):
         """
         Gets the user input in the searchField and if it isn't an empty string converts it into a valid query,
@@ -365,8 +399,12 @@ class UserInterface:
             self.__searched = True
             self.__resultList.delete(0, END)  # Clears the result list
 
-            for result in self.__searchResult:  # Adding results to the GUI list
-                self.__resultList.insert(END, result[0]['originalReviewTitle'])
+            if not self.__searchResult:
+                self.__suggestedQuery.pack(side=LEFT, anchor='w', padx=10)  # TODO: DA AMPLIARE
+            else:
+                self.__suggestedQuery.forget()  # TODO: SEMBRA CHE NON DIA PROBLEMI NEL CASO IN CUI NON suggestedQuery NON ESISTA E VIENE COMUNQUE ESEGUITO FORGET
+                for result in self.__searchResult:  # Adding results to the GUI list
+                    self.__resultList.insert(END, result[0]['originalReviewTitle'])
         else:
             self.__popUpMissingQuery()
 
