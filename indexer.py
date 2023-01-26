@@ -29,6 +29,11 @@ class Indexer:
         :param fileName: dataset file (.csv)
         :param indexName: directory in which the Indexing will take place
         """
+        self.__csvReader = None
+        self.__sentiment = None
+        self.__negativeScore = None
+        self.__positiveScore = None
+        self.__neutralScore = None
         if not os.path.exists(indexName):
             os.mkdir(indexName)  # creates a new 'indexName' directory if it does not exist
             self.__ix = create_in(indexName, Indexer.__schema)  # creates or overwrites the index in the specified directory

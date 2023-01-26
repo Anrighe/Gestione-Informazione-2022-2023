@@ -54,7 +54,7 @@ class UserInterface:
         self.__cleaner = None
         self.__queryList = None
         self.__searcher = None
-        self.__suggestedQuery = '[Suggested query placeholder]'
+        self.__correctorResult = None
 
         self.__windowWidth = 1366
         self.__windowHeight = 768
@@ -92,9 +92,9 @@ class UserInterface:
         self.__simpleSearchFrame = tkinter.Frame(self.__searchFrame)  # simpleSearchFrame contains: searchField, searchButton
         self.__simpleSearchFrame.config(background='white')
         self.__searchField = Entry(self.__simpleSearchFrame, width=35, font=('Microsoft Yi Baiti', 36))
-        self.__searchField.bind('<Return>', self.__userQueryCaller)
+        self.__searchField.bind('<Return>', lambda e: self.__userQuery())
         self.__searchButton = tkinter.Button(self.__simpleSearchFrame, text='Search', height=1, width=6,
-                                             command=self.userQuery, font=('System', 18, 'bold'), fg='dark blue')
+                                             command=self.__userQuery, font=('System', 18, 'bold'), fg='dark blue')
         self.__searchField.pack(side=LEFT)
         self.__searchButton.pack(side=RIGHT)
 
@@ -142,11 +142,10 @@ class UserInterface:
 
         self.__sentimentSearchFrame.pack(side=BOTTOM)
 
-        #TODO: DA RIVEDERE
-        self.__suggestedQuery = Label(self.__searchFrame, text=f'Where you looking for: {self.__querySuggestion}?',
+        self.__suggestedQuery = Label(self.__searchFrame, text=f'',
                                       font=('Microsoft Yi Baiti', 18, 'underline', 'bold'),
                                       background='white', foreground='blue')
-        self.__suggestedQuery.bind('<Button-1>', self.__querySuggestionPressed)  # TODO:CAMBIARE LA LAMBDA PER LA LABEL PREMUTA
+        self.__suggestedQuery.bind('<Button-1>', self.__querySuggestionPressed)
 
         self.__searchFrame.pack()
 
@@ -371,15 +370,12 @@ class UserInterface:
         self.__suggestedQuery = f'Where you looking for: {value}?'
 
     def __querySuggestionPressed(self, event):
-        print(event)
+        """Handles the selection of the suggested query, by replacing it to the older one and executing a search on the index"""
+        self.__searchField.delete(0, 'end')
+        self.__searchField.insert(0, self.__correctorResult)
+        self.__userQuery()
 
-    def __userQueryCaller(self, event):
-        """
-        Specifically used to call the userQuery funtion when the 'Enter' key is pressed while the searchField is focused
-        """
-        self.userQuery()
-
-    def userQuery(self):
+    def __userQuery(self):
         """
         Gets the user input in the searchField and if it isn't an empty string converts it into a valid query,
         searches the Index, orders the results with the ranking function and populates the resultList.
@@ -399,8 +395,11 @@ class UserInterface:
             self.__searched = True
             self.__resultList.delete(0, END)  # Clears the result list
 
-            if not self.__searchResult:
-                self.__suggestedQuery.pack(side=LEFT, anchor='w', padx=10)  # TODO: DA AMPLIARE
+            if not self.__searchResult:  # If the current query does not find any result
+                self.__correctorResult = self.__searcher.corrector()
+                if isinstance(self.__correctorResult, str):
+                    self.__suggestedQuery.config(text=f'Where you looking for: {self.__correctorResult}?')
+                    self.__suggestedQuery.pack(side=LEFT, anchor='w', padx=10)
             else:
                 self.__suggestedQuery.forget()  # TODO: SEMBRA CHE NON DIA PROBLEMI NEL CASO IN CUI NON suggestedQuery NON ESISTA E VIENE COMUNQUE ESEGUITO FORGET
                 for result in self.__searchResult:  # Adding results to the GUI list

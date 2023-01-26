@@ -1,5 +1,6 @@
 from whoosh import index
 from abc import ABC, abstractmethod
+from spellchecker import SpellChecker
 from whoosh.qparser import QueryParser
 from sentimentRanking import SentimentRanking
 
@@ -26,6 +27,12 @@ class SentimentSearcher(BaseSearcher):
         :param sentimentType: Contains the sentiment type the user is looking for (e.g.: 'positive')
         """
         # The attributes are protected because they need to be accessed by classes of a lower hierarchy
+        self.__correctedTokenInput = []
+        self.__misspelled = None
+        self.__spell = None
+        self._corrector = None
+        self._finalResult = None
+        self._resultSentiment = None
         self._indexDir = indexDir
         self._ix = index.open_dir(indexDir)
         self._searcher = self._ix.searcher()
@@ -34,6 +41,7 @@ class SentimentSearcher(BaseSearcher):
         self._sentiment = sentiment
         self._tokenInput = tokenInput
         self._sentimentType = sentimentType
+        self.__reader = self._ix.reader()
 
     def search(self):
         """Searches the index with the queries provided in queryList"""
@@ -48,6 +56,31 @@ class SentimentSearcher(BaseSearcher):
                 self._finalResult = self._resultSentiment
             else:
                 self._finalResult.filter(self._resultSentiment)  # intersection
+
+    def corrector(self):
+        foundCorrection = False
+        self.__spell = SpellChecker()
+
+        for word in self._tokenInput:
+            correctedWord = self.__spell.correction(word)
+
+            if correctedWord is not None:
+                byteStringCorrectedWord = correctedWord.encode()
+            else:
+                return False
+
+            if byteStringCorrectedWord in self.__reader.lexicon('originalProductTitle') \
+                    or byteStringCorrectedWord in self.__reader.lexicon('originalReviewTitle') \
+                    or byteStringCorrectedWord in self.__reader.lexicon('originalReviewContent'):
+                foundCorrection = True
+                self.__correctedTokenInput.append(correctedWord)
+            else:
+                self.__correctedTokenInput.append(word)
+
+        if foundCorrection:
+            return ' '.join(self.__correctedTokenInput)
+        else:
+            return False
 
 
 class SentimentSearcherRanker(SentimentSearcher):
