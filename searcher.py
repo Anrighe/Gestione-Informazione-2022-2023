@@ -42,6 +42,7 @@ class SentimentSearcher(BaseSearcher):
         self._tokenInput = tokenInput
         self._sentimentType = sentimentType
         self.__reader = self._ix.reader()
+        self._tfIdfRanking = False
 
     def search(self):
         """Searches the index with the queries provided in queryList"""
@@ -86,6 +87,8 @@ class SentimentSearcher(BaseSearcher):
 class SentimentSearcherRanker(SentimentSearcher):
     """Class that extends SentimentSearcher by also adding a ranking function"""
     def __init__(self, indexDir, tokenInput, queryList, sentiment, sentimentType):
+        self.__ranker = None
+        self.__resultList = None
         super().__init__(indexDir, tokenInput, queryList, sentiment, sentimentType)
 
     def search(self):
@@ -96,6 +99,7 @@ class SentimentSearcherRanker(SentimentSearcher):
         Ranks the result based on how much a document is relevant to the user query
         :return: List of ordered results by relevancy
         """
-        ranker = SentimentRanking(self._finalResult, self._tokenInput, self._sentiment, self._sentimentType)
-        resultList = ranker.calculateRank()
-        return resultList
+        self.__ranker = SentimentRanking(self._finalResult, self._tokenInput, self._sentiment, self._sentimentType)
+
+        self.__resultList = self.__ranker.calculateRank()
+        return self.__resultList

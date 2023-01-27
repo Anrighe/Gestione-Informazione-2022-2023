@@ -10,9 +10,6 @@ class SentimentRanking:
         :param tokenInput: Tokenized user query
         :param sentiment: True if the user wants to filter by sentiment
         :param sentimentType: Contains the sentiment type the user is looking for (e.g.: 'positive')
-        :param REVIEW_CONTENT_BOOST: Boost applied to the reviewContent matches
-        :param REVIEW_TITLE_BOOST: Boost applied to the reviewTitle matches
-        :param PRODUCT_TITLE_BOOST: Boost applied to the productTitle matches
         """
         self.__queryResult = queryResult
         self.__tokenInput = tokenInput
@@ -21,9 +18,9 @@ class SentimentRanking:
         self.__tokenReviewTitle = []
         self.__tokenReviewContent = []
 
-        self.__REVIEW_CONTENT_BOOST = reviewContentBoost
-        self.__REVIEW_TITLE_BOOST = reviewTitleBoost
-        self.__PRODUCT_TITLE_BOOST = productTitleBoost
+        self.__REVIEW_CONTENT_BOOST = reviewContentBoost    # Boost applied to the reviewContent matches
+        self.__REVIEW_TITLE_BOOST = reviewTitleBoost        # Boost applied to the reviewTitle matches
+        self.__PRODUCT_TITLE_BOOST = productTitleBoost      # Boost applied to the productTitle matches
 
         self.__freqProductTitle = 0
         self.__freqReviewTitle = 0
@@ -37,6 +34,7 @@ class SentimentRanking:
         self.__sentiment = sentiment
         self.__sentimentType = sentimentType
         self.__sentimentValue = 0
+        self.__freq = None
 
         self.__listResult = []
 
@@ -68,7 +66,7 @@ class SentimentRanking:
                 "PRODUCT_TITLE_BOOST": self.__PRODUCT_TITLE_BOOST})
 
     def __freqNorm(self, tokenList):
-        """Norm 2 of the frequency of each word contained in the tokenList"""
+        """Norm 2 of the weight of each term contained in the tokenList"""
         result = 0
         tokenSet = list(dict.fromkeys(tokenList))
 
@@ -89,7 +87,6 @@ class SentimentRanking:
             self.__tokenReviewContent = word_tokenize(result["postReviewContent"])
 
             for word in self.__tokenInput:  # Fixes a word (e.g.: "fire")
-
                 self.__freqProductTitle += self.__tokenProductTitle.count(word) * self.__tokenInput.count(word)
                 self.__freqReviewTitle += self.__tokenReviewTitle.count(word) * self.__tokenInput.count(word)
                 self.__freqReviewContent += self.__tokenReviewContent.count(word) * self.__tokenInput.count(word)

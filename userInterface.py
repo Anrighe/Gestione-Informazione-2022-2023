@@ -361,14 +361,6 @@ class UserInterface:
         self.__okMissingQuery.pack(side=BOTTOM, pady=15)
         self.__labelMissingQuery.pack(side=BOTTOM, pady=0)
 
-    @property
-    def __querySuggestion(self):
-        return self.__suggestedQuery
-
-    @__querySuggestion.setter
-    def __querySuggestion(self, value):
-        self.__suggestedQuery = f'Where you looking for: {value}?'
-
     def __querySuggestionPressed(self, event):
         """Handles the selection of the suggested query, by replacing it to the older one and executing a search on the index"""
         self.__searchField.delete(0, 'end')
@@ -396,6 +388,7 @@ class UserInterface:
             self.__resultList.delete(0, END)  # Clears the result list
 
             if not self.__searchResult:  # If the current query does not find any result
+
                 self.__correctorResult = self.__searcher.corrector()
                 if isinstance(self.__correctorResult, str):
                     self.__suggestedQuery.config(text=f'Where you looking for: {self.__correctorResult}?')
