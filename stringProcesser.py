@@ -17,8 +17,8 @@ def stringProcesser(string, wnl, removeDuplicates=False):
     'appl watch 10'
     """
     if isinstance(string, str):
-        # removes all the punctuation from the string expect for the char "-"
-        noPunctuation = string.translate(str.maketrans('', '', '''!"#$%&\'()*+,./:;<=>?@[\\]^_`{|}~'''))
+        # removes all the punctuation from the string expect for the char "-" and "*"
+        noPunctuation = string.translate(str.maketrans('', '', '''!"#$%&\'()+,./:;<=>?@[\\]^_`{|}~'''))
         noPunctuation = noPunctuation.replace(" - ", " ")  # Only replaces the occurrences of " - " with a whitespace
 
         token = nltk.word_tokenize(noPunctuation)

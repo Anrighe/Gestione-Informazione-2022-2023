@@ -113,12 +113,15 @@ class Indexer:
                                                neutral=self.__neutralScore,
                                                negative=self.__negativeScore)
                 except RuntimeError:
-                    print('Runtime error: reviewContent is too long for the sentiment analysis model')
+                    print('Runtime error: The review content of the current document is too long for the sentiment analysis model')
                 except KeyboardInterrupt:
-                    print('Keyboard Interrupt detected')
+                    print('Keyboard Interrupt detected\nCommitting changes, please wait.')
                     self.__writer.commit()
+                    print('Changes committed, exiting...')
                     exit(-1)
 
                 self.__counter += 1
 
+        print('Committing changes, please wait.')
         self.__writer.commit()
+        print('Changes committed, exiting...')
