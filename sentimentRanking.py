@@ -38,8 +38,6 @@ class SentimentRanking:
 
         self.__listResult = []
 
-        print(self.__tokenInput)
-
     @property
     def __freq(self):
         return (self.__freqProductTitle,
