@@ -53,6 +53,7 @@ Testato su:
 
 4) Procedura d'installazione (con pip3 e da terminale linux):
     pip3 install torch
+    pip3 install whoosh
     pip3 install nltk
     pip3 install --upgrade packaging
     pip3 install transformers
