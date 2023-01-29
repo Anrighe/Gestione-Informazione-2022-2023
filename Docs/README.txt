@@ -32,6 +32,7 @@ matplotlib-inline            0.1.6
 nltk                         3.7
 numpy                        1.23.4
 pandas                       1.5.1
+packaging                    >= 20.9
 pip                          22.3.1
 pyspellchecker               0.7.1
 RangeSlider                  2021.7.4
@@ -50,13 +51,13 @@ Testato su:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-4) Procedura d'installazione (con pip e da terminale linux):
-    pip install torch
-    pip install nltk
-    pip install --upgrade packaging #(>= 20.9)
-    pip install transformers
-    pip install pyspellchecker
-    pip install RangeSlider
+4) Procedura d'installazione (con pip3 e da terminale linux):
+    pip3 install torch
+    pip3 install nltk
+    pip3 install --upgrade packaging
+    pip3 install transformers
+    pip3 install pyspellchecker
+    pip3 install RangeSlider
 
     python3
     >>> nltk.download('punkt')
