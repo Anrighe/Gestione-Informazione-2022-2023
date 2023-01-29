@@ -38,6 +38,8 @@ class SentimentRanking:
 
         self.__listResult = []
 
+        print(self.__tokenInput)
+
     @property
     def __freq(self):
         return (self.__freqProductTitle,
@@ -82,9 +84,7 @@ class SentimentRanking:
         for result in self.__queryResult:  # Fixes a result (e.g.: negativity 0.9)
             self.__freq = 0
 
-            # In order to calculate the ranking of a document it must be ensured each document field contains something
-            if result["postProductTitle"] != '' and result["postReviewTitle"] != '' and result["postReviewContent"] != '':
-
+            if self.__tokenInput:  # Checks if the processed query contains something to avoid ranking documents with an empty query
                 self.__tokenProductTitle = word_tokenize(result["postProductTitle"])
                 self.__tokenReviewTitle = word_tokenize(result["postReviewTitle"])
                 self.__tokenReviewContent = word_tokenize(result["postReviewContent"])
@@ -99,9 +99,19 @@ class SentimentRanking:
                 self.__freqNormReviewContent = self.__freqNorm(self.__tokenReviewContent)
                 self.__freqNormTokenInput = self.__freqNorm(self.__tokenInput)
 
-                sim1 = self.__REVIEW_CONTENT_BOOST * (self.__freqReviewContent / (self.__freqNormReviewContent * self.__freqNormTokenInput))
-                sim2 = self.__REVIEW_TITLE_BOOST * (self.__freqReviewTitle / (self.__freqNormReviewTitle * self.__freqNormTokenInput))
-                sim3 = self.__PRODUCT_TITLE_BOOST * (self.__freqProductTitle / (self.__freqNormProductTitle * self.__freqNormTokenInput))
+                # Checking the norm of the document weights to avoid dividing by 0
+                if self.__freqNormReviewContent != 0:
+                    sim1 = self.__REVIEW_CONTENT_BOOST * (self.__freqReviewContent / (self.__freqNormReviewContent * self.__freqNormTokenInput))
+                else:
+                    sim1 = 0
+                if self.__freqNormReviewTitle != 0:
+                    sim2 = self.__REVIEW_TITLE_BOOST * (self.__freqReviewTitle / (self.__freqNormReviewTitle * self.__freqNormTokenInput))
+                else:
+                    sim2 = 0
+                if self.__freqNormProductTitle != 0:
+                    sim3 = self.__PRODUCT_TITLE_BOOST * (self.__freqProductTitle / (self.__freqNormProductTitle * self.__freqNormTokenInput))
+                else:
+                    sim3 = 0
 
                 if self.__sentiment:
                     self.__sentimentValue = float(result[self.__sentimentType])
@@ -112,11 +122,6 @@ class SentimentRanking:
                                 self.__REVIEW_CONTENT_BOOST + self.__REVIEW_TITLE_BOOST + self.__PRODUCT_TITLE_BOOST)
 
                 self.__listResult.append((result, similarity))
-
-            else:
-                print("postProductTitle:", result["postProductTitle"])  # DEBUG
-                print("postReviewTitle:", result["postReviewTitle"])  # DEBUG
-                print("postReviewContent:", result["postReviewContent"])  # DEBUG
 
             self.__listResult = sorted(self.__listResult, key=lambda x: x[1], reverse=True)
         return self.__listResult
