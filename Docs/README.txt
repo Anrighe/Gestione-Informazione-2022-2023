@@ -75,3 +75,16 @@ Testato su:
     5.b) Esecuzione GUI per ricerca:
         Windows: py main.py
         Unix: python3 main.py
+        
+All'interno dell'archivio sono presenti due script Python principali:
+
+   indexerStarter.py -> avvia l'Indicizzazione (5.a) creando una cartella, 
+      se non già presente, di nome [index_directory]. È già presente una 
+      directory "sentimentIndex" che contiene tutti i documenti del .csv 
+      indicizzati.
+
+  main.py -> (5.b) una volta eseguito, si renderà necessario specificare 
+      il percorso assoluto della cartella contenente l'indice nell'apposito
+      menú "File". Di default verrà selezionata la cartella "sentimentIndex".
+      Se la directory contenente l'indice è situata all'interno del progetto, 
+      non sará necessario specificare l'intero percorso, ma solo il nome.
