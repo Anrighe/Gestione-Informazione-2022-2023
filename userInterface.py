@@ -59,9 +59,10 @@ class UserInterface:
         self.__windowWidth = 1366
         self.__windowHeight = 768
         self.__window = Tk()  # Creates Tkinter window
-        self.__window.title('''Gestione dell'Informazione 2022-2023  -  Search Engine per Recensioni di Prodotti Amazon  -  Enrico Marras (152336), Lorenzo Colli (153063), Mattia Lazzarini (152833)''')
+        self.__window.title(f'''Gestione dell'Informazione 2022-2023  -  Search Engine per Recensioni di Prodotti Amazon  -  Enrico Marras (152336), Lorenzo Colli (153063), Mattia Lazzarini (152833)  -  {self.__indexDir}''')
         self.__window.geometry(self.__geometryCentered(self.__windowWidth, self.__windowHeight,
                                                        self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
+
 
         self.__menuBar = Menu(self.__window)  # Creates the Menu Bar
         self.__window.config(menu=self.__menuBar)  # Displays the Menu in the window
@@ -81,7 +82,11 @@ class UserInterface:
         self.__docs.add_command(label='README', command=self.__openReadme)
         self.__docs.add_command(label='Logic Diagram', command=self.__openLogicDiagram)
         self.__docs.add_command(label='Ranking Function', command=self.__openRankingFunction)
-        self.__docs.add_command(label='Benchmark', command=self.__openBenchmark)
+        self.__docs.add_command(label='Stopwords', command=self.__openStopwords)
+        self.__docs.add_command(label='Benchmark Queries', command=self.__openQueries)
+        self.__docs.add_command(label='Benchmark Results', command=self.__openBenchmark)
+        self.__docs.add_separator()
+        self.__docs.add_command(label='Presentation', command=self.__openPresentation)
 
         self.__fullFrame = tkinter.Frame(self.__window)  # fullFrame contains: searchFrame, resultFrame
         self.__fullFrame.config(background='white')
@@ -217,11 +222,11 @@ class UserInterface:
 
     def __openProject(self):
         """Opens the progGestI-22-23.pdf file containing the project assignment"""
-        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}progGestI-22-23.pdf')  # Duck Typing
+        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}progGestI-22-23.pdf')  # Uses Duck Typing
 
     def __openReadme(self):
         """Opens the README.txt file"""
-        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}README.txt')  # Duck Typing
+        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}README.txt')  # Uses Duck Typing
 
     def __openLogicDiagram(self):
         """Opens the SchemaLogicoProgetto.png which contains the logic diagram representing the behaviour of this program"""
@@ -231,9 +236,28 @@ class UserInterface:
         """Opens the rankingFunction.png which contains the formula used for the ranking function"""
         os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}rankingFunction.png')
 
+    def __openStopwords(self):
+        """Opens the AmazonReviews.STP file which contains the list of the stopwords used"""
+        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}AmazonReviews.STP')  # Uses Duck Typing
+
+    def __openQueries(self):
+        """Opens the AmazonReviews.QUE file which contains the list of the queries used for the benchmarks"""
+        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}AmazonReviews.QUE')  # Uses Duck Typing
+
     def __openBenchmark(self):
-        """Opens the BENCHMARK.txt file"""
-        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}AmazonReviews.REL')  # Duck Typing
+        """Opens the AmazonReviews.REL file which contains the results of the benchmarks"""
+        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}AmazonReviews.REL')  # Uses Duck Typing
+
+    def __openDCG(self):
+        """
+        Opens the AmazonReviews.DCG file which contains the results of the calculation of the Discounted Cumulative Gain
+        for each query
+        """
+        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}AmazonReviews.DCG')  # Uses Duck Typing
+
+    def __openPresentation(self):
+        """Opens the Progetto_Gestione_dellInformazione.pptx file which contains the presentation of the project"""
+        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}Progetto_Gestione_dellInformazione.pptx')
 
     def __setPositiveSentimentType(self):
         """Triggered when the 'Positive' Radio Button is pressed"""
@@ -265,7 +289,7 @@ class UserInterface:
         self.__indexDir = self.__entryIndex.get()
         if self.__indexDir == '':
             self.__indexDir = 'sentimentIndex'
-
+        self.__window.title(f'''Gestione dell'Informazione 2022-2023  -  Search Engine per Recensioni di Prodotti Amazon  -  Enrico Marras (152336), Lorenzo Colli (153063), Mattia Lazzarini (152833)  -  {self.__indexDir}''')
         try:
             assert os.path.exists(self.__indexDir)
             self.__topIndex.destroy()
