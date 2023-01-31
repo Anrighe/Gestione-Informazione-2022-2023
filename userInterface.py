@@ -59,7 +59,7 @@ class UserInterface:
         self.__windowWidth = 1366
         self.__windowHeight = 768
         self.__window = Tk()  # Creates Tkinter window
-        self.__window.title('''Complementi di Programmazione 2022-2023  -  Search Engine per Recensioni di Prodotti Amazon  -  Enrico Marras (152336), Lorenzo Colli (153063), Mattia Lazzarini (152833)''')
+        self.__window.title('''Gestione dell'Informazione 2022-2023  -  Search Engine per Recensioni di Prodotti Amazon  -  Enrico Marras (152336), Lorenzo Colli (153063), Mattia Lazzarini (152833)''')
         self.__window.geometry(self.__geometryCentered(self.__windowWidth, self.__windowHeight,
                                                        self.__window.winfo_screenwidth(), self.__window.winfo_screenheight()))
 
@@ -233,7 +233,7 @@ class UserInterface:
 
     def __openBenchmark(self):
         """Opens the BENCHMARK.txt file"""
-        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}BENCHMARK.txt')  # Duck Typing
+        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}AmazonReviews.REL')  # Duck Typing
 
     def __setPositiveSentimentType(self):
         """Triggered when the 'Positive' Radio Button is pressed"""
@@ -394,7 +394,7 @@ class UserInterface:
                     self.__suggestedQuery.config(text=f'Where you looking for: {self.__correctorResult}?')
                     self.__suggestedQuery.pack(side=LEFT, anchor='w', padx=10)
             else:
-                self.__suggestedQuery.forget()  # TODO: SEMBRA CHE NON DIA PROBLEMI NEL CASO IN CUI NON suggestedQuery NON ESISTA E VIENE COMUNQUE ESEGUITO FORGET
+                self.__suggestedQuery.forget()
                 for result in self.__searchResult:  # Adding results to the GUI list
                     self.__resultList.insert(END, result[0]['originalReviewTitle'])
         else:

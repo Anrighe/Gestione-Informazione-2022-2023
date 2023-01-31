@@ -1,0 +1,42 @@
+* Per ogni query sono stati considerati i primi 20 risultati per la valutazione della rilevanza e per il calcolo del DCG
+
+QUERY 1)
+	Rilevanza risultati (0-3): [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]
+	DCG: 23.437794399679674
+
+
+QUERY 2)
+	Rilevanza risultati (0-3): [2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,3,2,2,2]
+	DCG: 15.580781982253455
+
+QUERY 3)
+	Rilevanza risultati (0-3): [3,3,3,3,2,3,3,2,3,2,3,3,3,2,3,3,3,3,3,3]
+	DCG: 22.110104977571773
+
+QUERY 4)
+	Rilevanza risultati (0-3): [1,3,2,1,1,3,2,2,3,2,3,3,3,1,2,2,3,3,2,1]
+	DCG: 16.225518579285737
+
+QUERY 5)
+	Rilevanza risultati (0-3): [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]
+	DCG: 23.437794399679674
+
+QUERY 6)
+	Rilevanza risultati (0-3): [3,2,3,3,3,2,2,2,3,3,3,3,3,2,2,3,3,2,3,3]
+	DCG: 20.60298104558864
+
+QUERY 7)
+	Rilevanza risultati (0-3): [3,3,1,3,1,1,1,3,2,2,2,2,1,1,1,2,1,1,1,1]
+	DCG: 14.913767444311956
+
+QUERY 8)
+	Rilevanza risultati (0-3): [0,0,0,0,0,0,0,0,0,3,3,1,3,0,0,1,0,0,0,0]
+	DCG: 3.1099418748786967
+
+QUERY 9)
+	Rilevanza risultati (0-3): []
+	DCG: 0
+
+QUERY 10)
+	Rilevanza risultati (0-3): [3,3,3,3,3,2,2,3,3,3,3,2,2,3,3,3,3,3,2,3]
+	DCG: 21.910144391892025

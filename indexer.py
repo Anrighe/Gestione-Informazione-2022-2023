@@ -118,7 +118,7 @@ class Indexer:
                     print('Keyboard Interrupt detected\nCommitting changes, please wait.')
                     self.__writer.commit()
                     print('Changes committed, exiting...')
-                    exit(-1)
+                    exit(1)
 
                 self.__counter += 1
 
