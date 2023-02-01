@@ -77,7 +77,7 @@ class UserInterface:
         # Adding Docs Menu
         self.__docs = Menu(self.__menuBar, tearoff=0)
         self.__menuBar.add_cascade(label='Docs', menu=self.__docs)
-        self.__docs.add_command(label='Project', command=self.__openProject)
+        self.__docs.add_command(label='Project Assignment', command=self.__openProject)
         self.__docs.add_separator()
         self.__docs.add_command(label='README', command=self.__openReadme)
         self.__docs.add_command(label='Logic Diagram', command=self.__openLogicDiagram)
@@ -85,8 +85,6 @@ class UserInterface:
         self.__docs.add_command(label='Stopwords', command=self.__openStopwords)
         self.__docs.add_command(label='Benchmark Queries', command=self.__openQueries)
         self.__docs.add_command(label='Benchmark Results', command=self.__openBenchmark)
-        self.__docs.add_separator()
-        self.__docs.add_command(label='Presentation', command=self.__openPresentation)
 
         self.__fullFrame = tkinter.Frame(self.__window)  # fullFrame contains: searchFrame, resultFrame
         self.__fullFrame.config(background='white')
@@ -254,10 +252,6 @@ class UserInterface:
         for each query
         """
         os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}AmazonReviews.DCG')  # Uses Duck Typing
-
-    def __openPresentation(self):
-        """Opens the Progetto_Gestione_dellInformazione.pptx file which contains the presentation of the project"""
-        os.startfile(f'Docs{self.__fileSystemSeparator.getSeparator()}Progetto_Gestione_dellInformazione.pptx')
 
     def __setPositiveSentimentType(self):
         """Triggered when the 'Positive' Radio Button is pressed"""

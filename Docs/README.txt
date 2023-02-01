@@ -23,7 +23,31 @@ Lazzarini   Mattia      152833
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-3) Dipendenze:
+3) Contenuto Archivio:
+.
+├── AmazonReviews.csv: Dataset su cui lavora il search engine
+├── Docs
+│   ├── AmazonReviews.DCG: Calcoli inerenti ai valori di DCG per ogni query
+│   ├── AmazonReviews.QUE: Lista delle query eseguite per i benchmark
+│   ├── AmazonReviews.REL: Lista per ogni query dei documenti risultanti
+│   ├── AmazonReviews.STP: Lista delle stopwords utilizzate
+│   ├── README.txt
+│   ├── SchemaLogicoProgetto.png: Breve schema grafico riguardante la struttura del progetto
+│   ├── progGestI-22-23.pdf: Consegna del progetto
+│   └── rankingFunction.png: Versione ad 'alto livello' della funzione di ranking usata
+├── indexer.py
+├── indexerStarter.py
+├── inputCleaner.py
+├── main.py
+├── searcher.py
+├── sentimentIndex
+├── sentimentRanking.py
+├── stringProcesser.py
+└── userInterface.py
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+4) Dipendenze:
 Package                      Versione utilizzata
 ---------------------------- -------------------
 huggingface-hub              0.11.0
@@ -51,7 +75,7 @@ Testato su:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-4) Procedura d'installazione (con pip3 e da terminale linux):
+5) Procedura d'installazione (con pip3 e da terminale linux):
     pip3 install torch
     pip3 install whoosh
     pip3 install nltk
@@ -67,23 +91,23 @@ Testato su:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-5) Uso dell'applicazione:
-    5.a) Indicizzazione:
+6) Uso dell'applicazione:
+    6.a) Indicizzazione:
         Windows: py indexerStarter.py [dataset_file] [index_directory]
         Unix: python3 indexerStarter.py [dataset_file] [index_directory]
 
-    5.b) Esecuzione GUI per ricerca:
+    6.b) Esecuzione GUI per ricerca:
         Windows: py main.py
         Unix: python3 main.py
         
 All'interno dell'archivio sono presenti due script Python principali:
 
-   indexerStarter.py -> avvia l'Indicizzazione (5.a) creando una cartella, 
+   indexerStarter.py -> avvia l'Indicizzazione (6.a) creando una cartella,
       se non già presente, di nome [index_directory]. È già presente una 
       directory "sentimentIndex" che contiene tutti i documenti del .csv 
       indicizzati.
 
-  main.py -> (5.b) una volta eseguito, si renderà necessario specificare 
+  main.py -> (6.b) una volta eseguito, si renderà necessario specificare
       il percorso assoluto della cartella contenente l'indice nell'apposito
       menú "File". Di default verrà selezionata la cartella "sentimentIndex".
       Se la directory contenente l'indice è situata all'interno del progetto, 

@@ -2,7 +2,6 @@ QUERY 1)
 	
 	'Tablet' (No Sentiment)
 
-
 QUERY 2)
 
 	'E-Reader cheap' (Positive 0.5 TO 1.0)
@@ -14,7 +13,6 @@ QUERY 3)
 QUERY 4)
 
 	'Tablet productivity' (Negative 0.5 TO 1.0)
-
 
 QUERY 5)
 
@@ -38,7 +36,7 @@ QUERY 7)
 
 QUERY 8)
 
-	Amazon Fire Tv Stick (No sentiment)
+	'Amazon Fire Tv Stick' (No sentiment)
 
 QUERY 9)
 
